@@ -56,7 +56,7 @@ async function getItems(queue, id, nextPageToken, message) {
                             let nextPage = "&pageToken=" + json.nextPageToken;
                             await new Promise(resolve => getItems(queue, id, nextPage, message)).then(resolve);
                         } else {
-                            console.log(queue.length());
+                            message.channel.send(":white_check_mark: **Enqueued " + queue.length() + " songs!**");
                             if (isPlaying === false) {
                                 isPlaying = true;
                                 playMusic(queue, queue.songs[0]._id, message);
