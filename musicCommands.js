@@ -331,7 +331,7 @@ async function check_queue(queue, message, args) {
         if (n > 1) {
             let t3 = "---------------QUEUE LIST-----------------\n";
             t2 += t3;
-            if (n <= 10) {
+            if (n <= 11) {
                 for (var i = 1; i < n; i++) {
                     var temp = "#" + (i) + ": " + queue.songs[i]._name + "\n[Requested by " + queue.songs[i]._requester + "]\n\n";
                     t2 += temp;
