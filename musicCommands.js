@@ -50,13 +50,14 @@ async function getItems(queue, id, nextPageToken, message) {
                     message.channel.send('Got error, code: ' + json.error.code + ', with message: ' + json.error.message);
                     return console.error(json.error);
                 }
+                let oldQueueLength = queue.length();
                 await processData(json.items, queue, message.author.username).then(() => {
                     setTimeout(async () => {
                         if (json.nextPageToken) {
                             let nextPage = "&pageToken=" + json.nextPageToken;
                             await new Promise(resolve => getItems(queue, id, nextPage, message)).then(resolve);
                         } else {
-                            message.channel.send(":white_check_mark: **Enqueued " + queue.length() + " songs!**");
+                            message.channel.send(":white_check_mark: **Enqueued " + (queue.length() - oldQueueLength) + " songs!**");
                             if (isPlaying === false) {
                                 isPlaying = true;
                                 playMusic(queue, queue.songs[0]._id, message);
