@@ -8,7 +8,6 @@ const ggtrans = require('google-translate-api');
 const musicQueue = require('./musicQueue.js');
 const musicCommands = require('./musicCommands.js');
 
-const ytapikey = process.env.YT_API_KEY;
 const prefix  = process.env.PREFIX;
 const OwnerID = process.env.OWNER_ID;
 const bot_token = process.env.BOT_TOKEN;
