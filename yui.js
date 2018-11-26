@@ -5,35 +5,31 @@ const bot = new discord.Client({
 });
 const request = require('request');
 const ggtrans = require('google-translate-api');
-const fs = require('fs');
 const musicQueue = require('./musicQueue.js');
 const musicCommands = require('./musicCommands.js');
 
-// const ytapikey = process.env.YT_API_KEY;
-// const prefix  = process.env.PREFIX;
-// const OwnerID = process.env.OWNER_ID;
-// const bot_token = process.env.BOT_TOKEN;
-// const tenor_key = process.env.TENOR_KEY;
-// const anon_id = process.env.ANON_ID;
-var config = JSON.parse(fs.readFileSync('./config.json', 'utf-8'));
-const prefix = config.prefix;
-const bot_token = config.token;
-const tenor_key = config.tenor_key;
-const anon_id = config.anon_id;
+const ytapikey = process.env.YT_API_KEY;
+const prefix  = process.env.PREFIX;
+const OwnerID = process.env.OWNER_ID;
+const bot_token = process.env.BOT_TOKEN;
+const tenor_key = process.env.TENOR_KEY;
+const anon_id = process.env.ANON_ID;
+const colorCodeYui = 'FFA000';
 
 var queue = new musicQueue;
 
 var boundVoiceChannel = null;
 var boundTextChannel = null;
 var leaveOnTimeOut = null;
-//additional stuff
-const colorCodeYui = 'FFA000';
+
+
 console.log('Launching Yui-chan...')
 bot.login(bot_token);
 bot.on('ready', () => {
   console.log('Yui is online!');
   bot.user.setActivity('📻 Radio Happy', { url: 'https://twitch.tv/onlypolaris', type: 'STREAMING' });
 });
+
 bot.on('voiceStateUpdate', (oldMem, newMem) => {
   if (!boundVoiceChannel) return;
   let oldStat = oldMem.voiceChannel;
@@ -59,6 +55,7 @@ bot.on('voiceStateUpdate', (oldMem, newMem) => {
     }
   }
 });
+
 bot.on("message", async (message) => {
   if (!message.content.startsWith(prefix) || message.author.bot) return;
   var args = message.content.slice(prefix.length).trim().split(/ +/g);
