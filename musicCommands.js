@@ -504,7 +504,7 @@ module.exports = {
     remove_songs: remove_songs,
     skip_songs: skip_songs,
     shuffle_queue: shuffle_queue,
-    loopSetting = loop_setting,
+    loopSetting : loop_setting,
     resetStatus: resetStatus,
     nowPlaying: getNowPlayingData,
     pause: pauseStream,
