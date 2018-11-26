@@ -33,14 +33,15 @@ async function queuePlaylist(message, queue, args) {
     try {
         await getPlaylistId(args, async function (playlist_id) {
             let nextPageToken = '';
-            await getItems(queue, playlist_id, nextPageToken, message);
+            let oldQueueLength = queue.length();
+            await getItems(queue, playlist_id, nextPageToken, message, oldQueueLength);
         });
     } catch (err) {
         return console.error(err);
     }
 }
 
-async function getItems(queue, id, nextPageToken, message) {
+async function getItems(queue, id, nextPageToken, message, oldQueueLength) {
     return new Promise((resolve) => {
         request("https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50" + nextPageToken + "&playlistId=" + id +
             "&fields=items(id%2Ckind%2Csnippet(channelId%2CchannelTitle%2CresourceId(kind%2CvideoId)%2Ctitle))%2CnextPageToken&key=" + ytapikey,
@@ -50,7 +51,6 @@ async function getItems(queue, id, nextPageToken, message) {
                     message.channel.send('Got error, code: ' + json.error.code + ', with message: ' + json.error.message);
                     return console.error(json.error);
                 }
-                let oldQueueLength = queue.length();
                 await processData(json.items, queue, message.author.username).then(() => {
                     setTimeout(async () => {
                         if (json.nextPageToken) {
