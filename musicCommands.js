@@ -121,7 +121,7 @@ function playMusic(queue, id, message) {
             quality: qual
         });
         streamDispatcher = Connection.playStream(stream, {
-            volume: 0.5,
+            volume: 0.7,
         });
         streamDispatcher.on('start', () => {
             Connection.player.streamingData.pausedTime = 0;
