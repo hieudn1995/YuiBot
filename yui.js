@@ -165,30 +165,7 @@ bot.on("message", async (message) => {
       message.channel.send("I'm playing at **`" + boundTextChannel + "`** - **`" + boundVoiceChannel + "`**");
       return;
     }
-    if (!args[0]) {
-      if (!musicCommands.isLooping) {
-        musicCommands.isLooping = true;
-        message.channel.send(' :repeat: _**Loop enabled!**_');
-      }
-      else {
-        musicCommands.isLooping = false;
-        message.channel.send(' :twisted_rightwards_arrows: _**Loop disabled!**_');
-      }
-    }
-    else if (args[0].toLowerCase() === 'queue') {
-      if (!musicCommands.isQueueLooping) {
-        musicCommands.isQueueLooping = true;
-        message.channel.send(' :repeat: _**Queue loop enabled!**_');
-      }
-      else {
-        musicCommands.isQueueLooping = false;
-        message.channel.send(' :twisted_rightwards_arrows: _**Queue loop disabled!**_');
-      }
-    }
-    else {
-      message.channel.send('Invailid option, action aborted!');
-      return;
-    }
+    musicCommands.loopSetting(message, args);
   }
   if (command === 'shuffle') {
     if (message.member.voiceChannel) {
