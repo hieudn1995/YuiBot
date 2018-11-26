@@ -4,11 +4,10 @@ const ytdl = require('ytdl-core');
 const song = require('./songMetaData');
 const getPlaylistID = require('get-youtube-playlist-id');
 const getYoutubeID = require('get-youtube-id');
-const fs = require('fs');
-var config = JSON.parse(fs.readFileSync('./config.json', 'utf-8'));
 
-const ytapikey = config.ytapikey;
+const ytapikey = process.env.YOUTUBE_API_KEY;
 const colorCodeYui = 'FFA000';
+
 var isAutoPlaying = false;
 var isLooping = false;
 var isQueueLooping = false;
@@ -51,7 +50,6 @@ async function getItems(queue, id, nextPageToken, message) {
                     message.channel.send('Got error, code: ' + json.error.code + ', with message: ' + json.error.message);
                     return console.error(json.error);
                 }
-                //backup here.
                 await processData(json.items, queue, message.author.username).then(() => {
                     setTimeout(async () => {
                         if (json.nextPageToken) {
@@ -65,23 +63,11 @@ async function getItems(queue, id, nextPageToken, message) {
                                 message.channel.send('**`🎶 Playlist starting - NOW! 🎶`**');
                             }
                         }
-                    }, 1000);
+                    }, 500);
                 }, (msg)=>{ console.error(msg); });
             });
     });
 }
-/*
- json.items.forEach(async function (e) {
-                    if (e.snippet.title.toLowerCase() !== 'deleted video' || e.snippet.title.toLowerCase() !== 'private video') {
-                        await ytdlGetInfo(queue, e.snippet.resourceId.videoId, message.author.username);
-                        if (isPlaying === false) {
-                            isPlaying = true;
-                            playMusic(queue, e.snippet.resourceId.videoId, message);
-                            message.channel.send('**`🎶 Playlist starting - NOW! 🎶`**');
-                        }
-                    }
-                });
- */
 function processData(data, queue, requester) {
     return new Promise((resolve, reject) => {
         try {
@@ -264,7 +250,6 @@ async function auto_play(queue, channelId_related, msg) {
             }
         });
 }
-
 function pauseStream(message) {
     if (!isPause) {
         streamDispatcher.pause();
@@ -274,7 +259,6 @@ function pauseStream(message) {
         message.channel.send("*Currently paused!*");
     }
 }
-
 function resumeStream(message) {
     if (isPause) {
         streamDispatcher.resume();
@@ -284,7 +268,6 @@ function resumeStream(message) {
         message.channel.send("*Currently playing!*");
     }
 }
-
 function resetStatus() {
     isAutoPlaying = false;
     isQueueLooping = false;
@@ -294,11 +277,9 @@ function resetStatus() {
         isPlaying = false;
     }
 }
-
 function streamingTime() {
     return streamDispatcher.time;
 }
-
 function shuffle_queue() {
     for (var i = queue.length() - 1; i > 1; i--) {
         let j = Math.floor(Math.random() * (i)) + 1;
@@ -307,7 +288,6 @@ function shuffle_queue() {
         queue.songs[j] = temp;
     }
 }
-
 function getChannelID_pl(id) {
     request('https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=1&relatedToVideoId=' + id +
         '&type=video&fields=items%2Fsnippet%2FchannelId&key=' + ytapikey,
@@ -460,13 +440,11 @@ function getID(str, callback) {
         });
     }
 }
-
 function isYtlink(str) {
     if (typeof str === 'string') {
         return (str.indexOf('youtube.com') >= 0) || (str.indexOf('youtu.be') >= 0);
     } else return false;
 }
-
 function time_converter(num) {
     if (num == 0) return 'LIVE';
     let t1 = Math.floor(num / 60);
