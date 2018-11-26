@@ -21,7 +21,7 @@ class musicQueue {
   }
   clearQueue() {
     let temp = this.songs.length - 1;
-    this.songs.slice(1, temp);
+    this.songs.splice(1, temp);
   }
   last() {
     return this.songs[this.length() - 1];
