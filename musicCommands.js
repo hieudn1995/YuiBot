@@ -280,7 +280,7 @@ function resetStatus() {
 function streamingTime() {
     return streamDispatcher.time;
 }
-function shuffle_queue() {
+function shuffle_queue(queue) {
     for (var i = queue.length() - 1; i > 1; i--) {
         let j = Math.floor(Math.random() * (i)) + 1;
         let temp = queue.songs[i];
