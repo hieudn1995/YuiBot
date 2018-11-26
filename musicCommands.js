@@ -280,6 +280,28 @@ function resetStatus() {
 function streamingTime() {
     return streamDispatcher.time;
 }
+function loop_setting(message, args) {
+    if (!args[0]) {
+        if (!isLooping) {
+            isLooping = true;
+            message.channel.send(' :repeat: _**Loop enabled!**_');
+        } else {
+            isLooping = false;
+            message.channel.send(' :twisted_rightwards_arrows: _**Loop disabled!**_');
+        }
+    } else if (args[0].toLowerCase() === 'queue') {
+        if (!isQueueLooping) {
+            isQueueLooping = true;
+            message.channel.send(' :repeat: _**Queue loop enabled!**_');
+        } else {
+            isQueueLooping = false;
+            message.channel.send(' :twisted_rightwards_arrows: _**Queue loop disabled!**_');
+        }
+    } else {
+        message.channel.send('Invailid option, action aborted!');
+        return;
+    }
+}
 function shuffle_queue(queue) {
     for (var i = queue.length() - 1; i > 1; i--) {
         let j = Math.floor(Math.random() * (i)) + 1;
@@ -482,10 +504,7 @@ module.exports = {
     remove_songs: remove_songs,
     skip_songs: skip_songs,
     shuffle_queue: shuffle_queue,
-    isPlaying: isPlaying,
-    isAutoPlaying: isAutoPlaying,
-    isLooping: isLooping,
-    isQueueLooping: isQueueLooping,
+    loopSetting = loop_setting,
     resetStatus: resetStatus,
     nowPlaying: getNowPlayingData,
     pause: pauseStream,
