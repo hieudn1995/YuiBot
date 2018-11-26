@@ -241,7 +241,7 @@ bot.on("message", async (message) => {
   if (command === 'autoplay') {
     if (message.member.voiceChannel) {
       if (checkBoundChannel(message, message.member.voiceChannel, true)) {
-        if (!isAutoPlaying) {
+        if (!musicCommands.isAutoPlaying) {
           musicCommands.isAutoPlaying = true;
           if (!queue.isEmpty()) {
             musicCommands.getChannelID_pl(queue.last()._id);
@@ -276,10 +276,14 @@ bot.on("message", async (message) => {
   if (command === 'say') {
     if (isMyOwner(message.author.id)) {
       args = args.join(" ");
-      message.delete().then(message => { message.channel.send(args); });
+      message.delete().then(message => { message.channel.send({
+        embed:  new discord.RichEmbed()
+        .setColor(colorCodeYui)
+        .setDescription(args)
+      }); });
     }
     else {
-      message.reply('Sorry but I will only speak for my Master.')
+      message.delete().then(message => { message.author.send('Sorry but i will only speak for my Master.'); });
     }
   }
   if (command === 'translate') {
