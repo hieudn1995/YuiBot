@@ -193,7 +193,7 @@ bot.on("message", async (message) => {
   if (command === 'shuffle') {
     if (message.member.voiceChannel) {
       if (checkBoundChannel(message, message.member.voiceChannel, false)) {
-        musicCommands.shuffle_queue();
+        musicCommands.shuffle_queue(queue);
         message.channel.send('**`QUEUE shuffled!`**');
       }
       else {
