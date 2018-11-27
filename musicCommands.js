@@ -88,6 +88,7 @@ function queueSong(message, queue, args) {
     let temp_status = '';
     getID(args, async function (id) {
         await ytdlGetInfo(queue, id, requester).then(async () => {
+            tmp_channelId = getChannelID_pl(queue.last()._id);
             if (isPlaying === false) {
                 isPlaying = true;
                 playMusic(queue, id, message);
@@ -138,7 +139,7 @@ function playMusic(queue, id, message) {
                 if (!isAutoPlaying) {
                     isPlaying = false;
                 } else {
-                    auto_play(queue, tmp_channelId, msg);
+                     autoPlaySong(queue, tmp_channelId, msg);
                 }
             } else {
                 if (!isLooping) {
@@ -235,14 +236,40 @@ async function ytdlGetInfo(queue, id, requester) {
         });
     });
 }
-async function auto_play(queue, channelId_related, msg) {
+function RNG(range) {
+    return new Promise(resolve => { resolve(Math.floor(Math.random() * range)); });
+}
+function autoPlay(message)
+{
+    if(!isAutoPlaying)
+    {
+        isAutoPlaying = true;
+        message.channel.send("**`📻 YUI's PABX MODE - ON! 🎶 - with you wherever you go.`**");
+    }
+    else
+    {
+        isAutoPlaying = false;
+        message.channel.send("**`📻 YUI's PABX MODE - OFF! 🎵`**");
+    }
+}
+function getChannelID_pl(id) {
+    request('https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=1&relatedToVideoId=' + id +
+        '&type=video&fields=items%2Fsnippet%2FchannelId&key=' + ytapikey,
+        function (err, respond, body) {
+            if (err) return console.error(err);
+            var json = JSON.parse(body);
+            if (json.error) return console.error(json.error);
+            tmp_channelId = json.items[0].snippet.channelId;
+        });
+}
+async function autoPlaySong(queue, channelId_related, msg) {
     request('https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=' + channelId_related +
         '&maxResults=50&type=video&fields=items(id%2Ckind%2Csnippet(channelId%2CchannelTitle%2Ctitle))&key=' + ytapikey,
         async (err, respond, body) => {
             if (err) return console.error(err);
             var json = JSON.parse(body);
             if (json.error) return console.error(json.error);
-            await RNG(json.items.length).then(async (rnd) => {
+            await RNG(json.items.length).then(async (rnd) =>{
                 if (json.items[rnd]) {
                     await ytdlGetInfo(queue, json.items[rnd].id.videoId, msg.author.username).then(() => {
                         playMusic(queue, queue.songs[0]._id, msg);
@@ -251,9 +278,6 @@ async function auto_play(queue, channelId_related, msg) {
                 }
             });
         });
-}
-function RNG(range) {
-    return new Promise(resolve => { resolve(Math.floor(Math.random() * range)); });
 }
 function pauseStream(message) {
     if (!isPause) {
@@ -314,16 +338,6 @@ function shuffle_queue(queue) {
         queue.songs[i] = queue.songs[j];
         queue.songs[j] = temp;
     }
-}
-function getChannelID_pl(id) {
-    request('https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=1&relatedToVideoId=' + id +
-        '&type=video&fields=items%2Fsnippet%2FchannelId&key=' + ytapikey,
-        function (err, respond, body) {
-            if (err) return console.error(err);
-            var json = JSON.parse(body);
-            if (json.error) return console.error(json.error);
-            tmp_channelId = json.items[0].snippet.channelId;
-        });
 }
 async function check_queue(queue, message, args) {
     if (queue.isEmpty()) return message.channel.send('**`Nothing in queue.`**');
@@ -503,7 +517,7 @@ module.exports = {
     queuePlaylist: queuePlaylist,
     queueSong: queueSong,
     search_list: search_list,
-    auto_play: auto_play,
+    autoPlay: autoPlay,
     getChannelID_pl: getChannelID_pl,
     check_queue: check_queue,
     remove_songs: remove_songs,
