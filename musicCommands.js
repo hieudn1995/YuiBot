@@ -209,7 +209,7 @@ function search_list(query, queue, message) {
                         if (!isNaN(index) && (index > 0 && index <= 10)) {
                             let id_search = id_box[index - 1];
                             tmp_channelId = channelIdbox[index - 1];
-                            queueSong(message, queue, message);
+                            queueSong(message, queue, id_search);
                         } else {
                             message.channel.send('Invailid option! Action aborted.')
                         }
