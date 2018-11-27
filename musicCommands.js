@@ -253,7 +253,7 @@ async function auto_play(queue, channelId_related, msg) {
         });
 }
 function RNG(range) {
-    return new Promise.resolve(Math.floor(Math.random() * range));
+    return new Promise(resolve => { resolve(Math.floor(Math.random() * range)); });
 }
 function pauseStream(message) {
     if (!isPause) {
