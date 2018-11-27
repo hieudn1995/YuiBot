@@ -242,7 +242,7 @@ async function auto_play(queue, channelId_related, msg) {
             if (err) return console.error(err);
             var json = JSON.parse(body);
             if (json.error) return console.error(json.error);
-            await RNG(json.items.length).then((rnd) =>{
+            await RNG(json.items.length).then(async (rnd) => {
                 if (json.items[rnd]) {
                     await ytdlGetInfo(queue, json.items[rnd].id.videoId, msg.author.username).then(() => {
                         playMusic(queue, queue.songs[0]._id, msg);
