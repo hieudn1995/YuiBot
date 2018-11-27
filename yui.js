@@ -217,16 +217,13 @@ bot.on("message", async (message) => {
   if (command === 'autoplay') {
     if (message.member.voiceChannel) {
       if (checkBoundChannel(message, message.member.voiceChannel, true)) {
-        if (!musicCommands.isAutoPlaying) {
-          musicCommands.isAutoPlaying = true;
-          if (!queue.isEmpty()) {
-            musicCommands.getChannelID_pl(queue.last()._id);
-          }
-          return message.channel.send("**`📻 YUI's PABX MODE - ON! 🎶 - with you wherever you go.`**");
+        musicCommands.autoPlay(message);
+        if (!queue.isEmpty()) {          
+          musicCommands.getChannelID_pl(queue.last()._id);
         }
-        else {
-          musicCommands.isAutoPlaying = false;
-          return message.channel.send("**`📻 YUI's PABX MODE - OFF! 🎵`**");
+        else
+        {
+          message.channel.send("*Ok, now where do we start? How about you add something first? XD*");          
         }
       }
       else {
