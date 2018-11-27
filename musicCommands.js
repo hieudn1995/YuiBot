@@ -242,14 +242,18 @@ async function auto_play(queue, channelId_related, msg) {
             if (err) return console.error(err);
             var json = JSON.parse(body);
             if (json.error) return console.error(json.error);
-            let rnd = await RNG(json.items.length);
-            if (json.items[rnd]) {
-                await playMusic(queue, json.items[rnd].id.videoId, msg);
-                queue.push(json.items[rnd].id.videoId);
-                msg.channel.send("**`🎧 Auto Play - Next:`** **_`🎵" + json.items[rnd].snippet.title + "🎵`_**");
-                await ytdlGetInfo(queue, json.items[rnd].id.videoId, msg.author.username);
-            }
+            await RNG(json.items.length).then((rnd) =>{
+                if (json.items[rnd]) {
+                    await ytdlGetInfo(queue, json.items[rnd].id.videoId, msg.author.username).then(() => {
+                        playMusic(queue, queue.songs[0]._id, msg);
+                        msg.channel.send("**`🎧 Auto Play - Next:`** **_`🎵" + queue.songs[0]._name + "🎵`_**");
+                    });
+                }
+            });
         });
+}
+function RNG(range) {
+    return new Promise.resolve(Math.floor(Math.random() * range));
 }
 function pauseStream(message) {
     if (!isPause) {
