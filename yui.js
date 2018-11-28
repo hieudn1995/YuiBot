@@ -3,7 +3,6 @@ const bot = new discord.Client({
   disabledEvents: ['TYPING_START', 'MESSAGE_REACTION_ADD', 'RELATIONSHIP_ADD', 'RELATIONSHIP_REMOVE', 'MESSAGE_REACTION_REMOVE'],
   disableEveryone: true
 });
-
 const musicQueue = require('./musicQueue.js');
 const musicCommands = require('./musicCommands.js');
 const utilCommands = require('./Utilities.js')
