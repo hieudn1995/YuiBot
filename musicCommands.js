@@ -324,8 +324,8 @@ function resetStatus() {
     isQueueLooping = false;
     isLooping = false;
     if (isPlaying) {
-        streamDispatcher.end();
         isPlaying = false;
+        streamDispatcher.end();
     }
 }
 
