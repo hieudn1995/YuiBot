@@ -3,19 +3,13 @@ const bot = new discord.Client({
   disabledEvents: ['TYPING_START', 'MESSAGE_REACTION_ADD', 'RELATIONSHIP_ADD', 'RELATIONSHIP_REMOVE', 'MESSAGE_REACTION_REMOVE'],
   disableEveryone: true
 });
-const fs = require('fs');
+
 const musicQueue = require('./musicQueue.js');
 const musicCommands = require('./musicCommands.js');
 const utilCommands = require('./Utilities.js')
-// const ytapikey = process.env.YT_API_KEY;
-// const prefix  = process.env.PREFIX;
-// const OwnerID = process.env.OWNER_ID;
-// const bot_token = process.env.BOT_TOKEN;
-// const tenor_key = process.env.TENOR_KEY;
-// const anon_id = process.env.ANON_ID;
-var config = JSON.parse(fs.readFileSync('./config.json', 'utf-8'));
-const prefix = config.prefix;
-const bot_token = config.token;
+const prefix  = process.env.PREFIX;
+const OwnerID = process.env.OWNER_ID;
+const bot_token = process.env.BOT_TOKEN;
 var queue = new musicQueue;
 var leaveOnTimeOut = undefined;
 console.log('Launching Yui-chan...')
@@ -186,93 +180,3 @@ bot.on("message", async (message) => {
     utilCommands.help(message, bot);
   }
 });
-// function isYtlink(str) {
-//   if (typeof str === 'string') {
-//     return (str.indexOf('youtube.com') >= 0) || (str.indexOf('youtu.be') >= 0);
-//   } else return false;
-// }
-// function checkBoundChannel(message, voiceChannel, join) {
-//   if (!boundVoiceChannel && join) {
-//     boundVoiceChannel = voiceChannel.name;
-//     boundTextChannel = message.channel.name;
-//     message.channel.send("Bound to Text Channel: **`" + boundTextChannel + "`** and Voice Channel: **`" + boundVoiceChannel + "`**!");
-//     return true;
-//   } else {
-//     if (message.channel.name !== boundTextChannel) {
-//       return false;
-//     } else {
-//       if (voiceChannel.name !== boundVoiceChannel) {
-//         return false;
-//       } else return true;
-//     }
-//   }
-// }
-// async function tenor_gif(query, message) {
-//   let num = await RNG(5);
-//   let mention_user;
-//   let des;
-//   if (message.mentions.users.first()) {
-//     mention_user = query.pop();
-//     query = query.join(" ");
-//     des = mention_user + ', you got a ' + query.toUpperCase() + " from " + message.author.toString();
-//   } else {
-//     query = query.join(" ");
-//     des = message.author.toString() + ", you got " + query.toUpperCase();
-//   }
-//   request('https://api.tenor.com/v1/search?q=anime ' + query + '&key=' + tenor_key + '&limit=5&media_filter=basic&anon_id=' + anon_id, function (err, respond, body) {
-//     if (err) return console.error(err);
-//     var json = JSON.parse(body);
-//     if (json.error) return console.error(json.error);
-//     var embed = new discord.RichEmbed()
-//       .setAuthor(bot.user.username, bot.user.avatarURL)
-//       .setImage(json.results[num].media[0].gif.url)
-//       .setColor(colorCodeYui)
-//       .setDescription(des)
-//     message.channel.send({
-//       embed
-//     });
-//   });
-// }
-
-// function RNG(range) {
-//   return Math.floor(Math.random() * range);
-// }
-
-// function translate(query, src_lang, des_lang, message) {
-//   ggtrans(query, {
-//     from: src_lang,
-//     to: des_lang
-//   }).then(res => {
-//     message.channel.send({
-//       embed: new discord.RichEmbed()
-//         .setColor(colorCodeYui)
-//         .setDescription(res.text)
-//     });
-//   }).catch(err => {
-//     message.channel.send('Error. Translation failed!');
-//     console.error(err);
-//     return;
-//   });
-// }
-// function administration_command(message, args) {
-//   let ad_command = args.shift().toLowerCase();
-//   if (message.guild.me.hasPermission(['BAN_MEMBERS', 'KICK_MEMBERS'])) {
-//     if (ad_command === 'kick') {
-//       let reason = args.join(' ');
-//       let kickMem = message.mentions.members.first();
-//       kickMem.kick(reason).then((mem) => {
-//         message.channel.send(mem.user.username + ' has been kicked by ' + message.author.username);
-//       });
-//     }
-//     if (ad_command === 'ban') {
-//       let reason = args.join(' ');
-//       let banMem = message.mentions.members.first();
-//       banMem.ban(reason).then((mem) => {
-//         message.channel.send(mem.user.username + ' has been banned by ' + message.author.username);
-//       });
-//     }
-//   } else {
-//     message.reply(" you don't have the required permissions to perform this action.");
-//     return;
-//   }
-// }
