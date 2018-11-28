@@ -4,11 +4,9 @@ const ytdl = require('ytdl-core');
 const song = require('./songMetaData');
 const getPlaylistID = require('get-youtube-playlist-id');
 const getYoutubeID = require('get-youtube-id');
-const fs = require('fs');
-var config = JSON.parse(fs.readFileSync('./config.json', 'utf-8'));
-
-const ytapikey = config.ytapikey;
+const ytapikey = process.env.YOUTUBE_API_KEY;
 const colorCodeYui = 'FFA000';
+
 var isAutoPlaying = false;
 var isLooping = false;
 var isQueueLooping = false;
@@ -60,7 +58,6 @@ async function getItems(queue, id, nextPageToken, message) {
                     message.channel.send('Got error, code: ' + json.error.code + ', with message: ' + json.error.message);
                     return console.error(json.error);
                 }
-                //backup here.
                 await processData(json.items, queue, message.author.username).then(() => {
                     setTimeout(async () => {
                         if (json.nextPageToken) {
@@ -80,18 +77,7 @@ async function getItems(queue, id, nextPageToken, message) {
             });
     });
 }
-/*
- json.items.forEach(async function (e) {
-                    if (e.snippet.title.toLowerCase() !== 'deleted video' || e.snippet.title.toLowerCase() !== 'private video') {
-                        await ytdlGetInfo(queue, e.snippet.resourceId.videoId, message.author.username);
-                        if (isPlaying === false) {
-                            isPlaying = true;
-                            playMusic(queue, e.snippet.resourceId.videoId, message);
-                            message.channel.send('**`🎶 Playlist starting - NOW! 🎶`**');
-                        }
-                    }
-                });
- */
+
 function processData(data, queue, requester) {
     return new Promise((resolve, reject) => {
         try {
