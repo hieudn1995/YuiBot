@@ -41,14 +41,15 @@ async function queuePlaylist(message, queue, args) {
     try {
         await getPlaylistId(args, async function (playlist_id) {
             let nextPageToken = '';
-            await getItems(queue, playlist_id, nextPageToken, message);
+            let oldQueueLength = queue.length();
+            await getItems(queue, playlist_id, nextPageToken, message, oldQueueLength);
         });
     } catch (err) {
         return console.error(err);
     }
 }
 
-async function getItems(queue, id, nextPageToken, message) {
+async function getItems(queue, id, nextPageToken, message, oldQueueLength) {
     return new Promise((resolve) => {
         request("https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50" + nextPageToken + "&playlistId=" + id +
             "&fields=items(id%2Ckind%2Csnippet(channelId%2CchannelTitle%2CresourceId(kind%2CvideoId)%2Ctitle))%2CnextPageToken&key=" + ytapikey,
@@ -62,8 +63,9 @@ async function getItems(queue, id, nextPageToken, message) {
                     setTimeout(async () => {
                         if (json.nextPageToken) {
                             let nextPage = "&pageToken=" + json.nextPageToken;
-                            await getItems(queue, id, nextPage, message).then(resolve);
+                            await getItems(queue, id, nextPageToken, message, oldQueueLength).then(resolve);
                         } else {
+                            message.channel.send(":white_check_mark: **Enqueued " + (queue.length() - oldQueueLength) + " songs!**");
                             if (isPlaying === false) {
                                 isPlaying = true;
                                 playMusic(queue, queue.songs[0]._id, message);
