@@ -1,12 +1,8 @@
 const request = require('request');
 const discord = require('discord.js');
-const fs = require('fs');
 
-var config = JSON.parse(fs.readFileSync('./config.json', 'utf-8'));
-const tenor_key = config.tenor_key;
-const anon_id = config.anon_id;
-// const tenor_key = process.env.TENOR_KEY;
-// const anon_id = process.env.ANON_ID;
+const tenor_key = process.env.TENOR_KEY;
+const anon_id = process.env.ANON_ID;
 
 var boundTextChannel = undefined;
 var boundVoiceChannel = undefined;
@@ -66,7 +62,6 @@ function checkBoundChannel(message, join) {
         message.reply("*please join a __Voice Channel__!*");
     }
 }
-// message.reply("*please join a __Voice Channel__!*");
 async function tenor_gif(query, message, bot) {
     message.delete().then(async message => {
         let num = await RNG(5);
