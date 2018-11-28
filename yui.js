@@ -5,13 +5,13 @@ const bot = new discord.Client({
 });
 const musicQueue = require('./musicQueue.js');
 const musicCommands = require('./musicCommands.js');
-const utilCommands = require('./Utilities.js')
+const utilCommands = require('./Utilities.js');
 const prefix  = process.env.PREFIX;
 const OwnerID = process.env.OWNER_ID;
 const bot_token = process.env.BOT_TOKEN;
 var queue = new musicQueue;
 var leaveOnTimeOut = undefined;
-console.log('Launching Yui-chan...')
+console.log('Launching Yui-chan...');
 bot.login(bot_token);
 bot.on('ready', () => {
   console.log('Yui is online!');
