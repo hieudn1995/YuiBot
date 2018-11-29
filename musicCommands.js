@@ -153,7 +153,7 @@ function playMusic(queue, id, message) {
                 }
             } else {
                 if (!isLooping) {
-                    msg.channel.send('Coming up - Next: **`🎧 ' + queue.songs[0]._name + '`**!');
+                    msg.channel.send('Now Playing: **`🎧 ' + queue.songs[0]._name + '`**!');
                 }
                 setTimeout(function () {
                     playMusic(queue, queue.songs[0]._id, message);
@@ -284,7 +284,7 @@ async function autoPlaySong(queue, channelId_related, msg) {
                 if (json.items[rnd]) {
                     await ytdlGetInfo(queue, json.items[rnd].id.videoId, msg.author.username).then(() => {
                         playMusic(queue, queue.songs[0]._id, msg);
-                        msg.channel.send("**`🎧 Auto Play - Next:`** **_`🎵" + queue.songs[0]._name + "🎵`_**");
+                        msg.channel.send("**`🎧 Auto Play - Now:`** **_`🎵" + queue.songs[0]._name + "🎵`_**");
                     });
                 }
             });
@@ -447,14 +447,14 @@ function remove_songs(message, queue, args) {
         let index = args[0];
         if (isNaN(index)) {
             if (index = 'last') {
-                message.channel.send('**' + queue.popLast() + '** has been removed from QUEUE.');
+                message.channel.send('**`' + queue.popLast() + '` has been removed from QUEUE!**');
             } else {
                 message.channel.send('Invailid option! Action aborted.');
                 return;
             }
         } else {
             Number(index);
-            message.channel.send('**' + queue.spliceSong(index) + '** has been removed from QUEUE.');
+            message.channel.send('**`' + queue.spliceSong(index) + '` has been removed from QUEUE!**');
         }
     } else {
         if (isNaN(args[0]) || isNaN(args[1])) {
@@ -465,7 +465,7 @@ function remove_songs(message, queue, args) {
             let length = Number(args[1]);
             if (pos < 1 || pos > queue.length() || length > (queue.length() - pos)) return;
             queue.spliceSongs(pos, length);
-            message.channel.send('Songs from number ' + pos + ' to ' + (pos + length - 1) + ' removed from QUEUE.');
+            message.channel.send('**Songs from number ' + pos + ' to ' + (pos + length - 1) + ' removed from QUEUE!**');
         }
     }
 }
