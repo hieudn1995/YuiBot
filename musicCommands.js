@@ -72,7 +72,7 @@ async function getItems(queue, id, nextPageToken, message, oldQueueLength) {
                                 message.channel.send('**`🎶 Playlist starting - NOW! 🎶`**');
                             }
                         }
-                    }, 1000);
+                    }, 200);
                 }, (msg) => {
                     console.error(msg);
                 });
