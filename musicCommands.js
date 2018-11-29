@@ -256,6 +256,7 @@ function RNG(range) {
 function autoPlay(message) {
     if (!isAutoPlaying) {
         isAutoPlaying = true;
+        message.member.voiceChannel.join();
         message.channel.send("**`📻 YUI's PABX MODE - ON! 🎶 - with you wherever you go.`**");
     } else {
         isAutoPlaying = false;
