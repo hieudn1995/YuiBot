@@ -97,7 +97,7 @@ function RNG(range) {
     });
 }
 
-function translate(args, message) {
+function translate(args, message, bot) {
     if (args[0] === 'code') {
         message.author.send("Here're the language codes required for translation", {
             embed: new discord.RichEmbed()
