@@ -97,7 +97,6 @@ function RNG(range) {
 }
 
 function translate(args, message) {
-    args = args.trim().split(/ +/g);
     if (args[0] === 'code') {
         message.author.send("Here're the language codes required for translation", {
             embed: new discord.RichEmbed()
