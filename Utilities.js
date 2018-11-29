@@ -1,5 +1,6 @@
 const request = require('request');
 const discord = require('discord.js');
+const ggtrans = require('google-translate-api');
 
 const tenor_key = process.env.TENOR_KEY;
 const anon_id = process.env.ANON_ID;
