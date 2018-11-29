@@ -98,23 +98,24 @@ function RNG(range) {
 }
 
 function translate(args, message, bot) {
-    if (args[0] === 'code') {
-        message.author.send("Here're the language codes required for translation", {
-            embed: new discord.RichEmbed()
-                .setAuthor('Language codes request', bot.user.avatarURL)
-                .setColor(colorCodeYui)
-                .setURL('https://cdn.discordapp.com/attachments/413313406993694728/456677126821773319/langcode.txt')
-                .setTitle('Language Codes (.txt file)')
-                .setDescription('To translate: type >translate <source language> <destination language> <your words(limit: 1000 words)>')
-        });
-    } else if (args.length < 3) {
-        return message.channel.send("Wrong format, use `>translate auto <destination language> <words>` or type `>translate code` for more information.");
-    } else {
-        let scr = args.shift();
-        let des = args.shift();
-        let query = args.join(" ");
-        googleTranslate(query, scr, des, message);
-    }
+    return message.channel.send("Currently unavailable. Gomennasai desu :(. Polaris is woking  on it.");
+//     if (args[0] === 'code') {
+//         message.author.send("Here're the language codes required for translation", {
+//             embed: new discord.RichEmbed()
+//                 .setAuthor('Language codes request', bot.user.avatarURL)
+//                 .setColor(colorCodeYui)
+//                 .setURL('https://cdn.discordapp.com/attachments/413313406993694728/456677126821773319/langcode.txt')
+//                 .setTitle('Language Codes (.txt file)')
+//                 .setDescription('To translate: type >translate <source language> <destination language> <your words(limit: 1000 words)>')
+//         });
+//     } else if (args.length < 3) {
+//         return message.channel.send("Wrong format, use `>translate auto <destination language> <words>` or type `>translate code` for more information.");
+//     } else {
+//         let scr = args.shift();
+//         let des = args.shift();
+//         let query = args.join(" ");
+//         googleTranslate(query, scr, des, message);
+//     }
 }
 
 function googleTranslate(query, src_lang, des_lang, message) {
