@@ -167,7 +167,7 @@ bot.on("message", async (message) => {
     utilCommands.say(args, message);
   }
   if (command === 'translate') {
-    utilCommands.translate(args, message)
+    utilCommands.translate(args, message, bot);
   }
   if (command === '-') {
     utilCommands.tenorGIF(args, message, bot);
