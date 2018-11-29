@@ -285,6 +285,9 @@ async function autoPlaySong(queue, channelId_related, msg) {
                     await ytdlGetInfo(queue, json.items[rnd].id.videoId, msg.author.username).then(() => {
                         playMusic(queue, queue.songs[0]._id, msg);
                         msg.channel.send("**`🎧 Auto Play - Now:`** **_`🎵" + queue.songs[0]._name + "🎵`_**");
+                    }, (error) => {
+                        autoPlaySong(queue, channelId_related, msg);
+                        return console.error(error);
                     });
                 }
             });
