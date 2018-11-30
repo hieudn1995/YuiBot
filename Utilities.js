@@ -98,7 +98,7 @@ function RNG(range) {
 }
 
 function translate(args, message, bot) {
-    return message.channel.send("Currently unavailable. Gomennasai desu :(. Polaris is woking  on it.");
+    return message.channel.send("Currently unavailable. Gomennasai desu :(. Polaris is working  on it.");
 //     if (args[0] === 'code') {
 //         message.author.send("Here're the language codes required for translation", {
 //             embed: new discord.RichEmbed()
