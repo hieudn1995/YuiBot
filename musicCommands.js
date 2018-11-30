@@ -475,10 +475,10 @@ function remove_songs(message, queue, args) {
 }
 async function getNowPlayingData(currSong, message, bot) {
     let t = streamDispatcher.time / 1000;
-    let np_box = "**`" + await time_cvt_ms(t) + "`𝗹" +
+    let np_box = "**`" + await time_converter(Math.round(t)) + "`𝗹" +
         await create_progressbar(t, currSong._duration) + "𝗹`" +
         await time_converter(currSong._duration) + "`**\n__`Channel`__: **`" + currSong._channel + "`**";
-    const embed = new discord.RichEmbed()
+    var embed = new discord.RichEmbed()
         .setTitle(currSong._name)
         .setAuthor('♫ Now Playing ♫', bot.user.avatarURL)
         .setDescription(np_box)
@@ -491,12 +491,14 @@ async function getNowPlayingData(currSong, message, bot) {
     });
 }
 
-function queue_length(queue) {
-    try {
-        return queue.totalDurLength();
-    } catch (error) {
-        return 0;
-    }
+async function queue_length(queue) {
+    return new Promise((resolve) => {
+        try {
+            return resolve(queue.totalDurLength());
+        } catch (error) {
+            return resolve(0);
+        }
+    });
 }
 
 function getID(str, callback) {
@@ -515,22 +517,22 @@ function isYtlink(str) {
     } else return false;
 }
 
-function time_converter(num) {
-    if (num == 0) return 'LIVE';
-    let t1 = Math.floor(num / 60);
-    let t2 = num % 60;
-    if (t1 < 60) {
-        return t2 >= 10 ? t1 + ":" + t2 : t1 + ":0" + t2;
-    } else {
-        let t3 = Math.floor(t1 / 60);
-        let t4 = t1 % 60;
-        let t5 = (t2 >= 10 ? t2 : "0" + t2);
-        return t4 >= 10 ? (t3 + ":" + t4 + ":" + t5) : (t3 + ":0" + t4 + ":" + t5);
-    }
-}
-async function time_cvt_ms(num) {
-    var x = await time_converter(Math.round(num));
-    return x;
+async function time_converter(num) {
+    return new Promise(resolve => {
+        if (num == 0) {
+            return resolve('LIVE');
+        }
+        let t1 = Math.floor(num / 60);
+        let t2 = num % 60;
+        if (t1 < 60) {
+            return resolve(t2 >= 10 ? t1 + ":" + t2 : t1 + ":0" + t2);
+        } else {
+            let t3 = Math.floor(t1 / 60);
+            let t4 = t1 % 60;
+            let t5 = (t2 >= 10 ? t2 : "0" + t2);
+            return resolve(t4 >= 10 ? (t3 + ":" + t4 + ":" + t5) : (t3 + ":0" + t4 + ":" + t5));
+        }
+    });
 }
 
 function create_progressbar(num_progress, num_total) {
