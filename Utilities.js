@@ -157,8 +157,9 @@ function adminCommands(message, args) {
 }
 
 function getPing(message, bot) {
+    let timestamp = message.createdTimestamp;
     message.channel.send('Pinging...').then((message) => {
-        let diff = (Date.now() - message.createdTimestamp) * 2;
+        let diff = (Date.now() - timestamp) * 2;
         //var t = '**```💻 ⇄ 🖥: ' + diff + 'ms```\n```🌸 ⇄ 🖥: ' + bot.pings[0] + 'ms```**';
         message.edit({
             embed: new discord.RichEmbed()
