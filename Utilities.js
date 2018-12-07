@@ -164,7 +164,7 @@ function getPing(message, bot) {
         message.edit({
             embed: new discord.RichEmbed()
                 .setColor(colorCodeYui)
-                .setDescription('**```💻 ⇄ 🖥: ' + diff + 'ms```\n```🌸 ⇄ 🖥: ' + bot.pings[0] + 'ms```**')
+                .setDescription('**```💻 ⇄ 🌸: ' + diff + 'ms```\n```🌸 ⇄ 🖥: ' + bot.pings[0] + 'ms```**')
         });
     });
 }
