@@ -157,14 +157,13 @@ function adminCommands(message, args) {
 }
 
 function getPing(message, bot) {
-    var now = Date.now();
     message.channel.send('Pinging...').then((message) => {
-        let diff = (Date.now() - now) * 2;
-        var t = '**```💻 ⇄ 🖥: ' + diff + 'ms```\n```🌸 ⇄ 🖥: ' + bot.pings[0] + 'ms```**';
+        let diff = (Date.now() - message.createdTimestamp) * 2;
+        //var t = '**```💻 ⇄ 🖥: ' + diff + 'ms```\n```🌸 ⇄ 🖥: ' + bot.pings[0] + 'ms```**';
         message.edit({
             embed: new discord.RichEmbed()
                 .setColor(colorCodeYui)
-                .setDescription(t)
+                .setDescription('**```💻 ⇄ 🖥: ' + diff + 'ms```\n```🌸 ⇄ 🖥: ' + bot.pings[0] + 'ms```**')
         });
     });
 }
