@@ -53,129 +53,145 @@ bot.on("message", async (message) => {
   if (!message.content.startsWith(prefix) || message.author.bot) return;
   var args = message.content.slice(prefix.length).trim().split(/ +/g);
   const command = args.shift().toLowerCase();
-  if (command === 'play') {
-    if (utilCommands.checkChannel(message, true)) {
-      musicCommands.play(message, queue, args);
-    }
-  }
-  if (command === "skip" || command === 'next') {
-    if (utilCommands.checkChannel(message, false)) {
-      if (queue.length() === 0) {
-        return message.reply('Nothing is playing!');
-      } else {
-        musicCommands.skip_songs(message, queue, args);
+  switch (command) {
+    case 'play': case 'p': {
+      if (utilCommands.checkChannel(message, true)) {
+        musicCommands.play(message, queue, args);
       }
+      break;
     }
-  }
-  if (command === "join" || command === "come") {
-    if (utilCommands.checkChannel(message, true)) {
-      message.member.voiceChannel.join();
-      return message.channel.send(" :loudspeaker: Kawaii **Yui-chan** is here~! xD");
-    }
-  }
-  if (command === "leave" || command === "bye") {
-    if (utilCommands.checkChannel(message, false)) {
-      musicCommands.resetStatus();
-      queue.deleteQueue();
-      utilCommands.resetStatus();
-      message.member.voiceChannel.leave();
-      return message.channel.send("**_Bye bye~! Matta nee~!_**");
-    }
-  }
-  if (command === 'np') {
-    if (utilCommands.checkChannel(message, false)) {
-      if (queue.length() === 0) {
-        message.reply('Nothing is playing!');
-      } else {
-        musicCommands.nowPlaying(queue.songs[0], message, bot);
-      }
-    }
-  }
-  if (command === 'queue') {
-    if (utilCommands.checkChannel(message, false)) {
-      if (queue.isEmpty()) {
-        return message.channel.send("There's nothing to play around here. How about adding something ?");
-      } else {
-        return musicCommands.check_queue(queue, message, args);
-      }
-    }
-  }
-  if (command === "pause") {
-    if (utilCommands.checkChannel(message, false)) {
-      musicCommands.pause(message);
-    }
-  }
-  if (command === "resume") {
-    if (utilCommands.checkChannel(message, false)) {
-      musicCommands.resume(message);
-    }
-  }
-  if (command === "stop") {
-    if (utilCommands.checkChannel(message, false)) {
-      queue.deleteQueue();
-      musicCommands.resetStatus();
-      message.channel.send('**Stopped!**');
-    }
-  }
-  if (command === 'loop') {
-    if (utilCommands.checkChannel(message, false)) {
-      musicCommands.loopSetting(message, args);
-    }
-  }
-  if (command === 'shuffle') {
-    if (message.member.voiceChannel) {
+    case 'skip': case 'next': {
       if (utilCommands.checkChannel(message, false)) {
-        musicCommands.shuffle_queue(queue);
-        message.channel.send(':twisted_rightwards_arrows: **`QUEUE shuffled!`**');
+        if (queue.length() === 0) {
+          return message.reply('Nothing is playing!');
+        } else {
+          musicCommands.skip_songs(message, queue, args);
+        }
       }
+      break;
     }
-  }
-  if (command === 'remove') {
-    if (utilCommands.checkChannel(message, false)) {
-      musicCommands.remove_songs(message, queue, args);
+    case 'join': case 'come': {
+      if (utilCommands.checkChannel(message, true)) {
+        message.member.voiceChannel.join();
+        return message.channel.send(" :loudspeaker: Kawaii **Yui-chan** is here~! xD");
+      }
+      break;
     }
-
-  }
-  if (command === 'clear') {
-    if (message.member.voiceChannel) {
+    case 'leave': case 'bye': {
       if (utilCommands.checkChannel(message, false)) {
-        queue.clearQueue();
-        return message.channel.send(":x: **Queue cleared!**");
+        musicCommands.resetStatus();
+        queue.deleteQueue();
+        utilCommands.resetStatus();
+        message.member.voiceChannel.leave();
+        return message.channel.send("**_Bye bye~! Matta nee~!_**");
       }
+      break;
     }
-  }
-  if (command === 'search') {
-    if (utilCommands.checkChannel(message, true)) {
-      var query = args.join(" ");
-      musicCommands.search_list(query, queue, message);
-    }
-  }
-  if (command === 'autoplay') {
-    if (utilCommands.checkChannel(message, true)) {
-      musicCommands.autoPlay(message);
-      if (!queue.isEmpty()) {
-        musicCommands.getChannelID_pl(queue.last()._id);
-      } else {
-        message.channel.send("*Ok, now where do we start? How about you add something first? XD*");
+    case 'np': {
+      if (utilCommands.checkChannel(message, false)) {
+        if (queue.length() === 0) {
+          message.reply('Nothing is playing!');
+        } else {
+          musicCommands.nowPlaying(queue.songs[0], message, bot);
+        }
       }
+      break;
     }
-  }
-  if (command === 'ping') {
-    utilCommands.getPing(message, bot);
-  }
-  if (command === 'say') {
-    utilCommands.say(args, message);
-  }
-  if (command === 'translate') {
-    utilCommands.translate(args, message, bot);
-  }
-  if (command === '-') {
-    utilCommands.tenorGIF(args, message, bot);
-  }
-  if (command === 'admin') {
-    utilCommands.adminCommands(message, args);
-  }
-  if (command === 'help') {
-    utilCommands.help(message, bot);
+    case 'queue': {
+      if (utilCommands.checkChannel(message, false)) {
+        if (queue.isEmpty()) {
+          return message.channel.send("There's nothing to play around here. How about adding something ?");
+        } else {
+          return musicCommands.check_queue(queue, message, args);
+        }
+      }
+      break;
+    }
+    case 'pause': {
+      if (utilCommands.checkChannel(message, false)) {
+        return musicCommands.pause(message);
+      }
+      break;
+    }
+    case 'resume': {
+      if (utilCommands.checkChannel(message, false)) {
+        return musicCommands.resume(message);
+      }
+      break;
+    }
+    case 'stop': {
+      if (utilCommands.checkChannel(message, false)) {
+        queue.deleteQueue();
+        musicCommands.resetStatus();
+        return message.channel.send('**Stopped!**');
+      }
+      break;
+    }
+    case 'loop': {
+      if (utilCommands.checkChannel(message, false)) {
+        return musicCommands.loopSetting(message, args);
+      }
+      break;
+    }
+    case 'shuffle': {
+      if (message.member.voiceChannel) {
+        if (utilCommands.checkChannel(message, false)) {
+          musicCommands.shuffle_queue(queue);
+          return message.channel.send(':twisted_rightwards_arrows: **`QUEUE shuffled!`**');
+        }
+      }
+      break;
+    }
+    case 'remove': {
+      if (utilCommands.checkChannel(message, false)) {
+        return musicCommands.remove_songs(message, queue, args);
+      }
+      break;
+    }
+    case 'clear': {
+      if (message.member.voiceChannel) {
+        if (utilCommands.checkChannel(message, false)) {
+          queue.clearQueue();
+          return message.channel.send(":x: **Queue cleared!**");
+        }
+      }
+      break;
+    }
+    case 'search': {
+      if (utilCommands.checkChannel(message, true)) {
+        var query = args.join(" ");
+        return musicCommands.search_list(query, queue, message);
+      }
+      break;
+    }
+    case 'autoplay': {
+      if (utilCommands.checkChannel(message, true)) {
+        musicCommands.autoPlay(message);
+        if (!queue.isEmpty()) {
+          return musicCommands.getChannelID_pl(queue.last()._id);
+        } else {
+          return message.channel.send("*Ok, now where do we start? How about you add something first? XD*");
+        }
+      }
+      break;
+    }
+    case 'ping': {
+      return utilCommands.getPing(message, bot);
+    }
+    case 'say': {
+      return utilCommands.say(args, message);
+    }
+   case 'translate': {
+      return utilCommands.translate(args, message)
+    }
+    case 'tenor': {
+      return utilCommands.tenorGIF(args, message, bot);
+    }
+    case 'admin': {
+      return utilCommands.adminCommands(message, args);
+    }
+    case 'help': {
+      return utilCommands.help(message, bot);
+    }
   }
 });
