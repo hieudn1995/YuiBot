@@ -448,17 +448,15 @@ function remove_songs(message, queue, args) {
         message.channel.send("Please choose certain song(s) from QUEUE to remove.");
         return;
     } else if (args.length === 1) {
-        let index = args[0];
-        if (isNaN(index)) {
-            if (index = 'last') {
+        if (isNaN(args[0])) {
+            if (index == 'last') {
                 message.channel.send('**`' + queue.popLast() + '` has been removed from QUEUE!**');
             } else {
                 message.channel.send('Invailid option! Action aborted.');
                 return;
             }
         } else {
-            Number(index);
-            message.channel.send('**`' + queue.spliceSong(index) + '` has been removed from QUEUE!**');
+            message.channel.send('**`' + queue.spliceSong(Number(args[0])) + '` has been removed from QUEUE!**');
         }
     } else {
         if (isNaN(args[0]) || isNaN(args[1])) {
@@ -486,9 +484,7 @@ async function getNowPlayingData(currSong, message, bot) {
         .setThumbnail(currSong._thumbUrl)
         .setURL(currSong._vidUrl)
         .setFooter('Requested by ' + currSong._requester)
-    message.channel.send({
-        embed
-    });
+    message.channel.send({ embed });
 }
 
 async function queue_length(queue) {
