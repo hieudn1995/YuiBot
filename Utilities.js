@@ -158,10 +158,12 @@ function adminCommands(message, args) {
 
 function getPing(message, bot) {
     let diff = (Date.now() - message.createdTimestamp) * 2;
-    message.channel.send({
-        embed: new discord.RichEmbed()
-            .setColor(colorCodeYui)
-            .setDescription('**```💻 ⇄ 🖥: ' + diff + 'ms```\n```🌸 ⇄ 🖥: ' + bot.pings[0] + 'ms```**')
+    message.channel.send('Pinging...').then((message) => {
+        message.edit({
+            embed: new discord.RichEmbed()
+                .setColor(colorCodeYui)
+                .setDescription('**```💻 ⇄ 🌸: ' + diff + 'ms```\n```🌸 ⇄ 🖥: ' + bot.pings[0] + 'ms```**')
+        });
     });
 }
 
