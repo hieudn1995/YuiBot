@@ -22,20 +22,17 @@ bot.on('ready', () => {
 });
 bot.on('voiceStateUpdate', (oldMem, newMem) => {
   switch (utilCommands.checkOnLeave(oldMem, newMem)) {
-    case 'clear':
-      {
+    case 'clear': {
         if (leaveOnTimeOut !== undefined) {
           clearTimeout(leaveOnTimeOut);
           leaveOnTimeOut = undefined;
         }
         break;
       }
-    case 'ignore':
-      {
+    case 'ignore': {
         break;
       }
-    case 'leave':
-      {
+    case 'leave': {
         if (oldMem.voiceChannel.members.size === 1) {
           leaveOnTimeOut = setTimeout(() => {
             if (musicCommands.isPlaying) {
