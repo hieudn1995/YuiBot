@@ -49,7 +49,7 @@ class musicQueue {
     return tName;
   }
   spliceSongs(index, length) {
-    this.songs.splice(index, length);
+    this.songs.splice(index, length - 1);
   }
 }
 
