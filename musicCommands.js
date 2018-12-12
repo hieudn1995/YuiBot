@@ -449,7 +449,7 @@ function remove_songs(message, queue, args) {
         return;
     } else if (args.length === 1) {
         if (isNaN(args[0])) {
-            if (args[0] == 'last') {
+            if (args[0] === 'last') {
                 message.channel.send('**`' + queue.popLast() + '` has been removed from QUEUE!**');
             } else {
                 message.channel.send('Invailid option! Action aborted.');
