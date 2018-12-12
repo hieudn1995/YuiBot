@@ -39,7 +39,7 @@ class musicQueue {
      return this.songs.length;
   }
   popLast() {
-    let tName = this.songs[this.length - 1]._name
+    let tName = this.songs[this.songs.length - 1]._name
     this.songs.pop();
     return tName;
   }
