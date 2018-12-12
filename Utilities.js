@@ -157,9 +157,8 @@ function adminCommands(message, args) {
 }
 
 function getPing(message, bot) {
-    
-    message.channel.send('Pinging...').then((sent) => {
-        let diff = (Date.now() - message.createdTimestamp)*2;
+    let diff = (Date.now() - message.createdTimestamp) * 2;
+    message.channel.send('Pinging...').then((sent) => {        
         sent.edit({
             embed: new discord.RichEmbed()
                 .setColor(colorCodeYui)
