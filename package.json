@@ -15,7 +15,7 @@
     "fs": "0.0.1-security",
     "get-youtube-id": "^1.0.0",
     "get-youtube-playlist-id": "0.0.1",
-    "google-translate-api": "^2.3.0",
+    //"google-translate-api": "^2.3.0",
     "opusscript": "0.0.6",
     "request": "^2.87.0",
     "ytdl-core": "^0.20.4"
