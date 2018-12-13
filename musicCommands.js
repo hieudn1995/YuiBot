@@ -75,6 +75,19 @@ async function getItems(queue, id, nextPageToken, message, oldQueueLength) {
                     }, 100);
                 }, (msg) => {
                     console.error(msg);
+                    setTimeout(async () => {
+                        if (json.nextPageToken) {
+                            let nextPage = "&pageToken=" + json.nextPageToken;
+                            await getItems(queue, id, nextPage, message, oldQueueLength).then(resolve);
+                        } else {
+                            message.channel.send(":white_check_mark: **Enqueued " + (queue.length() - oldQueueLength) + " songs!**");
+                            if (isPlaying === false) {
+                                isPlaying = true;
+                                playMusic(queue, queue.songs[0]._id, message);
+                                message.channel.send('**`🎶 Playlist starting - NOW! 🎶`**');
+                            }
+                        }
+                    }, 100);
                 });
             });
     });
@@ -82,14 +95,10 @@ async function getItems(queue, id, nextPageToken, message, oldQueueLength) {
 
 function processData(data, queue, requester) {
     return new Promise((resolve, reject) => {
-        try {
             var promises = data.map(async function (e) {
-                await ytdlGetInfo(queue, e.snippet.resourceId.videoId, requester).catch(err => reject(err));;
+                await ytdlGetInfo(queue, e.snippet.resourceId.videoId, requester).catch(err => console.error(err));
             });
-            Promise.all(promises).then(resolve);
-        } catch (err) {
-            reject(err);
-        }
+            Promise.all(promises).then(resolve).catch(err => reject(err));
     });
 }
 
