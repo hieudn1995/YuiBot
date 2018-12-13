@@ -72,7 +72,7 @@ async function getItems(queue, id, nextPageToken, message, oldQueueLength) {
                                 message.channel.send('**`🎶 Playlist starting - NOW! 🎶`**');
                             }
                         }
-                    }, 200);
+                    }, 100);
                 }, (msg) => {
                     console.error(msg);
                 });
@@ -84,7 +84,7 @@ function processData(data, queue, requester) {
     return new Promise((resolve, reject) => {
         try {
             var promises = data.map(async function (e) {
-                await ytdlGetInfo(queue, e.snippet.resourceId.videoId, requester);
+                await ytdlGetInfo(queue, e.snippet.resourceId.videoId, requester).catch(err => reject(err));;
             });
             Promise.all(promises).then(resolve);
         } catch (err) {
