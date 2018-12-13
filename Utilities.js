@@ -163,7 +163,7 @@ function getPing(message, bot) {
         sent.edit({
             embed: new discord.RichEmbed()
                 .setColor(colorCodeYui)
-                .setDescription('**```:revolving_hearts:: ' + diff + 'ms```\n``` :heartpulse:: ' + bot.pings[0] + 'ms```**')
+                .setDescription('**```💞: ' + diff + 'ms```\n```💓: ' + bot.pings[0] + 'ms```**')
         });
     });
 }
