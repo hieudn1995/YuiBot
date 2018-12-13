@@ -161,7 +161,7 @@ function getPing(message, bot) {
         let diff = (sent.createdTimestamp - message.createdTimestamp);
         sent.edit({
             embed: new discord.RichEmbed()
-                .setTitle(Status)
+                .setTitle('Status')
                 .setColor(colorCodeYui)
                 .setDescription(':revolving_hearts: **`: ' + diff + 'ms`**\n :heartpulse: **`: ' + bot.pings[0] + 'ms`**')
         });
