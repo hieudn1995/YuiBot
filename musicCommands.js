@@ -72,7 +72,7 @@ async function getItems(queue, id, nextPageToken, message, oldQueueLength) {
                                 message.channel.send('**`🎶 Playlist starting - NOW! 🎶`**');
                             }
                         }
-                    }, 100);
+                    }, 50);
                 }, (msg) => {
                     console.error(msg);
                     setTimeout(async () => {
@@ -87,7 +87,7 @@ async function getItems(queue, id, nextPageToken, message, oldQueueLength) {
                                 message.channel.send('**`🎶 Playlist starting - NOW! 🎶`**');
                             }
                         }
-                    }, 100);
+                    }, 50);
                 });
             });
     });
