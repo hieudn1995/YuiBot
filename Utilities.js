@@ -46,6 +46,7 @@ function checkBoundChannel(message, join) {
             boundVoiceChannel = message.member.voiceChannel;
             boundTextChannel = message.channel;
             message.channel.send("Bound to Text Channel: **`" + boundTextChannel.name + "`** and Voice Channel: **`" + boundVoiceChannel.name + "`**!");
+            boundVoiceChannel.join();
             return true;
         } else {
             if (message.channel === boundTextChannel && message.member.voiceChannel === boundVoiceChannel) {
