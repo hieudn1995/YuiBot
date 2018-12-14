@@ -613,6 +613,7 @@ function create_progressbar(num_progress, num_total) {
 }
 module.exports = {
     play: play,
+    addNext: addNext,
     search_list: search_list,
     autoPlay: autoPlay,
     getChannelID_pl: getChannelID_pl,
