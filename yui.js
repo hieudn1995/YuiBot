@@ -179,7 +179,7 @@ bot.on("message", async (message) => {
       return utilCommands.say(args, message);
     }
    case 'translate': {
-      return utilCommands.translate(args, message)
+      return utilCommands.translate(args, message, bot)
     }
     case 'tenor': {
       return utilCommands.tenorGIF(args, message);
