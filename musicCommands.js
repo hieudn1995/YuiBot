@@ -11,7 +11,7 @@ var isAutoPlaying = false;
 var isLooping = false;
 var isQueueLooping = false;
 var isPlaying = false;
-var streamDispatcher;
+var streamDispatcher = undefined;
 var isPause = false;
 var tmp_channelId = '';
 
