@@ -282,10 +282,8 @@ async function ytdlGetInfo(queue, id, requester) {
             if (err) {
                 reject(err);
             } else {
-                resolve(queue.addSong(
-                    new song(info.video_id, info.title, info.author.name,
-                        info.length_seconds, requester, info.video_url, info.thumbnail_url)
-                ));
+                resolve(queue.addSong(new song(info.video_id, info.title, info.author.name,
+                        info.length_seconds, requester, info.video_url, info.thumbnail_url)));
             }
         });
     });
