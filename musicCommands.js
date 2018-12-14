@@ -40,7 +40,7 @@ function isYtlink(str) {
 async function queuePlaylist(message, queue, args) {
     try {
         await getPlaylistId(args, function (playlist_id) {
-            message.channel.send('*Loading, please wait...*').then(async msg => {
+            message.channel.send(":hourglass_flowing_sand: **_Loading playlist, please wait..._**").then(async msg => {
                 let nextPageToken = '';
                 let oldQueueLength = queue.length();
                 await getItems(queue, playlist_id, nextPageToken, msg, oldQueueLength);
