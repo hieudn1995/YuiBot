@@ -8,7 +8,7 @@
  - https://tenor.com/gifapi/documentation 
  - https://developers.google.com/youtube/v3/ 
  
-**Some support module from npm:**
+**Some support modules from npm:**
  - request
  - get-youtube-id
  - get-youtube-playlist-id 
