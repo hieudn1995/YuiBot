@@ -1,5 +1,3 @@
-
-
 class musicQueue {
   constructor() {
     this.songs = [];
@@ -9,6 +7,9 @@ class musicQueue {
   }
   addSong(song) {
     this.songs.push(song);
+  }
+  addNext(song) {
+    this.songs.splice(1, 0, song);
   }
   shiftSong() {
       return this.songs.shift();
@@ -22,6 +23,9 @@ class musicQueue {
   clearQueue() {
     let temp = this.songs.length - 1;
     this.songs.splice(1, temp);
+  }
+  getAt(index) {
+    return this.songs[index];
   }
   last() {
     return this.songs[this.length() - 1];
