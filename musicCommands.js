@@ -43,7 +43,7 @@ async function queuePlaylist(message, queue, args) {
             message.channel.send(":hourglass_flowing_sand: **_Loading playlist, please wait..._**").then(async msg => {
                 let nextPageToken = '';
                 let oldQueueLength = queue.length();
-                await getItems(queue, playlist_id, nextPageToken, msg, oldQueueLength);
+                await getItems(queue, playlist_id, nextPageToken, msg, oldQueueLength, message);
             });
         });
     } catch (err) {
@@ -52,27 +52,27 @@ async function queuePlaylist(message, queue, args) {
     }
 }
 
-async function getItems(queue, id, nextPageToken, message, oldQueueLength) {
+async function getItems(queue, id, nextPageToken, message, oldQueueLength, originalMessage) {
     return new Promise((resolve) => {
         request("https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50" + nextPageToken + "&playlistId=" + id +
             "&fields=items(id%2Ckind%2Csnippet(channelId%2CchannelTitle%2CresourceId(kind%2CvideoId)%2Ctitle))%2CnextPageToken&key=" + ytapikey,
             async function (error, response, body) {
                 var json = JSON.parse(body);
                 if (json.error) {
-                    message.channel.send('Got error, code: ' + json.error.code + ', with message: ' + json.error.message);
+                    originalMessage.channel.send('Got error, code: ' + json.error.code + ', with message: ' + json.error.message);
                     return console.error(json.error);
                 }
                 await processData(json.items, queue, message.author.username).then(() => {
                     setTimeout(async () => {
                         if (json.nextPageToken) {
                             let nextPage = "&pageToken=" + json.nextPageToken;
-                            await getItems(queue, id, nextPage, message, oldQueueLength).then(resolve);
+                            await getItems(queue, id, nextPage, message, oldQueueLength, originalMessage).then(resolve);
                         } else {
                             message.edit(":white_check_mark: **Enqueued " + (queue.length() - oldQueueLength) + " songs!**");
                             if (isPlaying === false) {
                                 isPlaying = true;
-                                playMusic(queue, queue.songs[0]._id, message);
-                                message.channel.send('**`🎶 Playlist starting - NOW! 🎶`**');
+                                playMusic(queue, queue.songs[0]._id, originalMessage);
+                                originalMessage.channel.send('**`🎶 Playlist starting - NOW! 🎶`**');
                             }
                         }
                     }, 50);
@@ -81,13 +81,13 @@ async function getItems(queue, id, nextPageToken, message, oldQueueLength) {
                     setTimeout(async () => {
                         if (json.nextPageToken) {
                             let nextPage = "&pageToken=" + json.nextPageToken;
-                            await getItems(queue, id, nextPage, message, oldQueueLength).then(resolve);
+                            await getItems(queue, id, nextPage, message, oldQueueLength, originalMessage).then(resolve);
                         } else {
                             message.edit(":white_check_mark: **Enqueued " + (queue.length() - oldQueueLength) + " songs!**");
                             if (isPlaying === false) {
                                 isPlaying = true;
-                                playMusic(queue, queue.songs[0]._id, message);
-                                message.channel.send('**`🎶 Playlist starting - NOW! 🎶`**');
+                                playMusic(queue, queue.songs[0]._id, originalMessage);
+                                originalMessage.channel.send('**`🎶 Playlist starting - NOW! 🎶`**');
                             }
                         }
                     }, 50);
@@ -145,7 +145,7 @@ function playMusic(queue, id, message) {
             quality: qual
         });
         streamDispatcher = Connection.playStream(stream, {
-            volume: 0.6,
+            volume: 0.8,
         });
         streamDispatcher.on('start', () => {
             Connection.player.streamingData.pausedTime = 0;
