@@ -57,6 +57,12 @@ bot.on("message", async (message) => {
       }
       break;
     }
+    case 'pnext': case 'pn': {
+      if (utilCommands.checkChannel(message, true)) {
+        return musicCommands.addNext(message, queue, args);
+      }
+      break;
+    }
     case 'skip' : case 'next': {
       if (utilCommands.checkChannel(message, false)) {
         if (queue.length() === 0) {
