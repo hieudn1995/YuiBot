@@ -339,10 +339,12 @@ function resetStatus() {
     isAutoPlaying = false;
     isQueueLooping = false;
     isLooping = false;
+    isPause = false;
     if (isPlaying) {
         isPlaying = false;
-        if (streamDispatcher) {
+        if (streamDispatcher !== undefined) {
             streamDispatcher.end();
+            streamDispatcher = undefined;
         }        
     }
 }
