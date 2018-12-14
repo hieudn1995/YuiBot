@@ -63,20 +63,19 @@ function checkBoundChannel(message, join) {
         message.reply("*please join a __Voice Channel__!*");
     }
 }
-async function tenor_gif(query, message, bot) {
+async function tenor_gif(query, message) {
     message.delete().then(async message => {
         let num = await RNG(5);
-        let mention_user;
         let des;
         if (message.mentions.users.first()) {
-            mention_user = query.pop();
+            query.splice(query.indexOf(message.mentions.users.first()), 1);
             query = query.join(" ");
-            des = message.author.toString() + " " + query.toUpperCase() + " " + mention_user;
+            des = message.author.toString() + " " + query.toUpperCase() + " " + message.mentions.users.first();
         } else {
             query = query.join(" ");
             des = message.author.toString() + " " + query.toUpperCase();
         }
-        request('https://api.tenor.com/v1/search?q=anime ' + query + '&key=' + tenor_key + '&limit=5&media_filter=basic&anon_id=' + anon_id,
+        request('https://api.tenor.com/v1/search?q=' + query + ' anime&key=' + tenor_key + '&limit=5&media_filter=basic&anon_id=' + anon_id,
             function (err, respond, body) {
                 if (err) return console.error(err);
                 var json = JSON.parse(body);
