@@ -136,6 +136,38 @@ function queueSong(message, queue, args) {
     });
 }
 
+function addNext(message, queue, args) {
+    if (queue.isEmpty() || !isPlaying) {
+        return queueSong(message, queue, args);
+    } else {
+        args = args.join(" ");
+        if (isYtlink(args) && args.indexOf('list=') > -1) {
+            return message.channel.send("Currently cannot add playlist to next. Use `>play` instead.");
+        }
+        var requester = message.author.username;
+        getID(args, async (id) => {
+            await ytdlGetInfoNext(queue, id, requester).then(async () => {
+                var np_box = "*`Channel`*: **`" + queue.getAt(1)._channel + "`**" +
+                    "\n*`Duration`*: **`" + await time_converter(queue.getAt(1)._duration) + "`**" +
+                    "\n*`Position in queue`*: **`1`**";
+                var embed = new discord.RichEmbed()
+                    .setTitle(queue.getAt(1)._name)
+                    .setAuthor("♬ Added Next ♬", message.author.avatarURL)
+                    .setDescription(np_box)
+                    .setColor(colorCodeYui)
+                    .setThumbnail(queue.getAt(1)._thumbUrl)
+                    .setTimestamp()
+                    .setURL(queue.getAt(1)._vidUrl)
+                    .setFooter('Requested by ' + requester)
+                message.channel.send(embed);
+            }).catch(error => {
+                message.channel.send("Oops! Sorry, something went wrong. I couldn't get the song.");
+                console.error(error);
+            });
+        });
+    }
+}
+
 function playMusic(queue, id, message) {
     let msg = message;
     message.member.voiceChannel.join().then(function (Connection) {
@@ -254,6 +286,18 @@ async function ytdlGetInfo(queue, id, requester) {
                     new song(info.video_id, info.title, info.author.name,
                         info.length_seconds, requester, info.video_url, info.thumbnail_url)
                 ));
+            }
+        });
+    });
+}
+async function ytdlGetInfoNext(queue, id, requester) {
+    return new Promise((resolve, reject) => {
+        ytdl.getInfo(id, (err, info) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(queue.addNext(new song(info.video_id, info.title, info.author.name,
+                    info.length_seconds, requester, info.video_url, info.thumbnail_url)));
             }
         });
     });
