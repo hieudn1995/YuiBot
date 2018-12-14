@@ -15,10 +15,11 @@
  - ytdl-core
  
 **Some abilities:**
- - *Playing songs from queries or link (unlimited time)* 
+ - *Playing songs from queries or links (unlimited time)* 
  - *Playing youtube playlists (unlimited songs)*
  - *Playing youtube live streams (24/7,...)*
- - *Posting GIFs from tenor, doing administration jobs,...* 
+ - *Posting GIFs from TENOR API*
+ - *Some simple administrating commands*
  - *Now playing notices* 
  - *Bind and lock to a channel/Auto leave when no one's around, ...*
 
