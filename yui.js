@@ -182,7 +182,7 @@ bot.on("message", async (message) => {
       return utilCommands.translate(args, message)
     }
     case 'tenor': {
-      return utilCommands.tenorGIF(args, message, bot);
+      return utilCommands.tenorGIF(args, message);
     }
     case 'admin': {
       return utilCommands.adminCommands(message, args);
