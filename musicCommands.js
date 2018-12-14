@@ -39,12 +39,15 @@ function isYtlink(str) {
 }
 async function queuePlaylist(message, queue, args) {
     try {
-        await getPlaylistId(args, async function (playlist_id) {
-            let nextPageToken = '';
-            let oldQueueLength = queue.length();
-            await getItems(queue, playlist_id, nextPageToken, message, oldQueueLength);
+        await getPlaylistId(args, function (playlist_id) {
+            message.channel.send('*Loading, please wait...*').then(async msg => {
+                let nextPageToken = '';
+                let oldQueueLength = queue.length();
+                await getItems(queue, playlist_id, nextPageToken, msg, oldQueueLength);
+            });
         });
     } catch (err) {
+        message.channel.send("Sorry, something went wrong and i couldn't get the playlist.");
         return console.error(err);
     }
 }
@@ -65,7 +68,7 @@ async function getItems(queue, id, nextPageToken, message, oldQueueLength) {
                             let nextPage = "&pageToken=" + json.nextPageToken;
                             await getItems(queue, id, nextPage, message, oldQueueLength).then(resolve);
                         } else {
-                            message.channel.send(":white_check_mark: **Enqueued " + (queue.length() - oldQueueLength) + " songs!**");
+                            message.edit(":white_check_mark: **Enqueued " + (queue.length() - oldQueueLength) + " songs!**");
                             if (isPlaying === false) {
                                 isPlaying = true;
                                 playMusic(queue, queue.songs[0]._id, message);
@@ -80,7 +83,7 @@ async function getItems(queue, id, nextPageToken, message, oldQueueLength) {
                             let nextPage = "&pageToken=" + json.nextPageToken;
                             await getItems(queue, id, nextPage, message, oldQueueLength).then(resolve);
                         } else {
-                            message.channel.send(":white_check_mark: **Enqueued " + (queue.length() - oldQueueLength) + " songs!**");
+                            message.edit(":white_check_mark: **Enqueued " + (queue.length() - oldQueueLength) + " songs!**");
                             if (isPlaying === false) {
                                 isPlaying = true;
                                 playMusic(queue, queue.songs[0]._id, message);
@@ -166,7 +169,7 @@ function playMusic(queue, id, message) {
                 }
                 setTimeout(function () {
                     playMusic(queue, queue.songs[0]._id, message);
-                }, 100);
+                }, 50);
             }
         });
     });
@@ -305,7 +308,7 @@ async function autoPlaySong(queue, channelId_related, msg) {
 }
 
 function pauseStream(message) {
-    if (streamDispatcher !== undefined) {
+    if (streamDispatcher) {
         if (!isPause) {
             streamDispatcher.pause();
             isPause = true;
@@ -314,12 +317,12 @@ function pauseStream(message) {
             message.channel.send("*Currently paused!*");
         }
     } else {
-        message.channel.send("I'm not playing anything.")
+        message.channel.send("I'm not playing anything.");
     }
 }
 
 function resumeStream(message) {
-    if (streamDispatcher !== undefined) {
+    if (streamDispatcher) {
         if (isPause) {
             streamDispatcher.resume();
             isPause = false;
@@ -328,7 +331,7 @@ function resumeStream(message) {
             message.channel.send("*Currently playing!*");
         }
     } else {
-        message.channel.send("I'm not playing anything.")
+        message.channel.send("I'm not playing anything.");
     }
 }
 
@@ -337,14 +340,13 @@ function resetStatus() {
     isQueueLooping = false;
     isLooping = false;
     if (isPlaying) {
+        if (streamDispatcher) {
+            streamDispatcher.end();
+        }
         isPlaying = false;
-        streamDispatcher.end();
     }
 }
-
-function streamingTime() {
-    return streamDispatcher.time;
-}
+    
 
 function loopSetting(message, args) {
     if (!args[0]) {
@@ -436,19 +438,25 @@ function skip_songs(message, queue, args) {
             isLooping = false;
         }
         message.channel.send(" :fast_forward: **Skipped!**");
-        streamDispatcher.end();
+        if (streamDispatcher) {
+            streamDispatcher.end();
+        }
     } else if (isNaN(args[0])) {
         message.channel.send('Invailid option! Action aborted.');
         return;
     } else {
         let t = Number(args[0]);
-        if (t < 1 || t > queue.length()) return;
+        if (t < 0 || t > queue.length()) {
+            return message.channel.send('Index out of range! Please choose a valid one, use `>queue` for checking.');
+        }
         queue.spliceSongs(1, t);
         if (isLooping) {
             isLooping = false;
         }
-        streamDispatcher.end();
         message.channel.send(" :fast_forward: **Skipped " + t + " songs!**");
+        if (streamDispatcher) {
+            streamDispatcher.end();
+        }
     }
 }
 
@@ -457,15 +465,23 @@ function remove_songs(message, queue, args) {
         message.channel.send("Please choose certain song(s) from QUEUE to remove.");
         return;
     } else if (args.length === 1) {
-        if (isNaN(args[0])) {
-            if (args[0] === 'last') {
+        let index = args[0];
+        if (isNaN(index)) {
+            if (index = 'last') {
                 message.channel.send('**`' + queue.popLast() + '` has been removed from QUEUE!**');
             } else {
                 message.channel.send('Invailid option! Action aborted.');
                 return;
             }
         } else {
-            message.channel.send('**`' + queue.spliceSong(Number(args[0])) + '` has been removed from QUEUE!**');
+            Number(index);
+            if (index < 0 || index > queue.length()) {
+                return message.channel.send('Index out of range! Please choose a valid one, use `>queue` for checking.');
+            } else if (index === 0) {
+                return skip_songs(message, queue, args);
+            } else {
+                message.channel.send('**`' + queue.spliceSong(index) + '` has been removed from QUEUE!**');
+            }
         }
     } else {
         if (isNaN(args[0]) || isNaN(args[1])) {
@@ -474,15 +490,17 @@ function remove_songs(message, queue, args) {
         } else {
             let pos = Number(args[0]);
             let length = Number(args[1]);
-            if (pos < 1 || pos > queue.length() || length > (queue.length() - pos)) return;
+            if (pos < 1 || pos > queue.length() || length > (queue.length() - pos)) {
+                return message.channel.send('Index out of range! Please choose a valid one, use `>queue` for checking.');
+            }
             queue.spliceSongs(pos, length);
             message.channel.send('**Songs from number ' + pos + ' to ' + (pos + length - 1) + ' removed from QUEUE!**');
         }
     }
 }
 async function getNowPlayingData(currSong, message, bot) {
-    let t = streamDispatcher.time / 1000;
-    let np_box = "**`" + await time_converter(Math.round(t)) + "`𝗹" +
+    let t = Math.round(streamDispatcher.time / 1000);
+    let np_box = "**`" + await time_converter(t) + "`𝗹" +
         await create_progressbar(t, currSong._duration) + "𝗹`" +
         await time_converter(currSong._duration) + "`**\n__`Channel`__: **`" + currSong._channel + "`**";
     var embed = new discord.RichEmbed()
@@ -563,6 +581,5 @@ module.exports = {
     loopSetting: loopSetting,
     pause: pauseStream,
     resume: resumeStream,
-    time: streamingTime,
     isPlaying: isPlaying,
 }
