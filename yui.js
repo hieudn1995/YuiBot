@@ -53,16 +53,16 @@ bot.on("message", async (message) => {
   switch (command) {
     case 'play': case 'p': {
       if (utilCommands.checkChannel(message, true)) {
-        musicCommands.play(message, queue, args);
+        return musicCommands.play(message, queue, args);
       }
       break;
     }
-    case 'skip': case 'next': {
+    case 'skip' : case 'next': {
       if (utilCommands.checkChannel(message, false)) {
         if (queue.length() === 0) {
           return message.reply('Nothing is playing!');
         } else {
-          musicCommands.skip_songs(message, queue, args);
+          return musicCommands.skip_songs(message, queue, args);
         }
       }
       break;
@@ -74,22 +74,22 @@ bot.on("message", async (message) => {
       }
       break;
     }
-    case 'leave': case 'bye': {
+    case 'leave' : case 'bye': {
       if (utilCommands.checkChannel(message, false)) {
-        musicCommands.resetStatus();
         queue.deleteQueue();
+        musicCommands.resetStatus();        
         utilCommands.resetStatus();
         message.member.voiceChannel.leave();
         return message.channel.send("**_Bye bye~! Matta nee~!_**");
       }
       break;
     }
-    case 'np': {
+    case 'np' : case 'nowplaying': {
       if (utilCommands.checkChannel(message, false)) {
         if (queue.length() === 0) {
-          message.reply('Nothing is playing!');
+          return message.reply('Nothing is playing!');
         } else {
-          musicCommands.nowPlaying(queue.songs[0], message, bot);
+          return musicCommands.nowPlaying(queue.songs[0], message, bot);
         }
       }
       break;
