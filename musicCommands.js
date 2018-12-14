@@ -62,7 +62,7 @@ async function getItems(queue, id, nextPageToken, message, oldQueueLength, origi
                     originalMessage.channel.send('Got error, code: ' + json.error.code + ', with message: ' + json.error.message);
                     return console.error(json.error);
                 }
-                await processData(json.items, queue, message.author.username).then(() => {
+                await processData(json.items, queue, originalMessage.author.username).then(() => {
                     setTimeout(async () => {
                         if (json.nextPageToken) {
                             let nextPage = "&pageToken=" + json.nextPageToken;
