@@ -75,7 +75,6 @@ bot.on("message", async (message) => {
     }
     case 'join': case 'come': {
       if (utilCommands.checkChannel(message, true)) {
-        message.member.voiceChannel.join();
         return message.channel.send(" :loudspeaker: Kawaii **Yui-chan** is here~! xD");
       }
       break;
