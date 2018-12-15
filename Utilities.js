@@ -163,7 +163,7 @@ function getPing(message, bot) {
             embed: new discord.RichEmbed()
                 .setTitle('Status')
                 .setColor(colorCodeYui)
-                .setDescription(':revolving_hearts: **`: ' + diff + 'ms`**\n :heartpulse: **`: ' + bot.pings[0] + 'ms`**')
+                .setDescription(':revolving_hearts: **`: ' + diff + 'ms`**\n:heartpulse: **`: ' + bot.pings[0] + 'ms`**')
         });
     });
 }
