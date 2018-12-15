@@ -219,7 +219,7 @@ function playMusic(queue, id, message) {
         } else {
             setTimeout(() => {
                 playMusic(queue, queue.songs[0]._id, message);
-            }, 50);
+            }, 100);
         }
     });
 }
