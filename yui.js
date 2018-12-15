@@ -124,9 +124,12 @@ bot.on("message", async (message) => {
     }
     case 'stop': {
       if (utilCommands.checkChannel(message, false)) {
-        queue.deleteQueue();
-        musicCommands.resetStatus();
-        return message.channel.send('**Stopped!**');
+        if(!queue.isEmpty()) {
+          queue.deleteQueue();
+          musicCommands.resetStatus();
+          return message.channel.send('**Stopped!**');
+        }
+        else { return message.channel.send("I'm not playing anything."); }
       }
       break;
     }
