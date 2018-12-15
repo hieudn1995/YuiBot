@@ -345,7 +345,8 @@ function getChannelID_pl(id) {
             tmp_channelId = json.items[0].snippet.channelId;
         });
 }
-async function autoPlaySong(queue, channelId_related, msg) {
+
+function autoPlaySong(queue, channelId_related, msg) {
     request('https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=' + channelId_related +
         '&maxResults=50&type=video&fields=items(id%2Ckind%2Csnippet(channelId%2CchannelTitle%2Ctitle))&key=' + ytapikey,
         async (err, respond, body) => {
@@ -356,7 +357,6 @@ async function autoPlaySong(queue, channelId_related, msg) {
                 if (json.items[rnd]) {
                     await ytdlGetInfo(queue, json.items[rnd].id.videoId, msg.author.username).then(() => {
                         playMusic(queue, queue.songs[0]._id, msg);
-                        msg.channel.send("**`🎧 Auto Play - Now:`** **_`🎵" + queue.songs[0]._name + "🎵`_**");
                     }, (error) => {
                         autoPlaySong(queue, channelId_related, msg);
                         return console.error(error);
