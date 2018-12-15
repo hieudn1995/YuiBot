@@ -12,8 +12,19 @@ var isLooping = false;
 var isQueueLooping = false;
 var isPlaying = false;
 var streamDispatcher = undefined;
+var voiceConnection = undefined;
 var isPause = false;
 var tmp_channelId = '';
+
+function createVoiceConnection(message) {
+    if (voiceConnection) {
+        return;
+    } else {
+        message.member.voiceChannel.join().then(Connection => {
+            voiceConnection = Connection;
+        });
+    }
+}
 
 function play(message, queue, args) {
     args = args.join(" ");
@@ -38,6 +49,7 @@ function isYtlink(str) {
     } else return false;
 }
 async function queuePlaylist(message, queue, args) {
+    createVoiceConnection(message);
     try {
         await getPlaylistId(args, function (playlist_id) {
             message.channel.send(":hourglass_flowing_sand: **_Loading playlist, please wait..._**").then(async msg => {
@@ -106,6 +118,7 @@ function processData(data, queue, requester) {
 }
 
 function queueSong(message, queue, args) {
+    createVoiceConnection(message);
     var requester = message.author.username;
     let temp_status = '';
     getID(args, async function (id) {
@@ -169,41 +182,45 @@ function addNext(message, queue, args) {
 }
 
 function playMusic(queue, id, message) {
-    let msg = message;
-    message.member.voiceChannel.join().then(function (Connection) {
-        let qual = (queue.songs[0]._duration === 'LIVE') ? '95' : 'highestaudio';
-        stream = ytdl('https://www.youtube.com/watch?v=' + id, {
-            audioonly: true,
-            quality: qual
-        });
-        streamDispatcher = Connection.playStream(stream, {
-            volume: 0.75,
-        });
-        streamDispatcher.on('start', () => {
-            Connection.player.streamingData.pausedTime = 0;
-        });
-        streamDispatcher.on('end', () => {
-            var temp = queue.shiftSong();
-            if (isLooping) {
-                queue.unshiftSong(temp);
-            } else if (isQueueLooping) {
-                queue.addSong(temp);
-            }
-            if (queue.length() === 0) {
-                if (!isAutoPlaying) {
-                    isPlaying = false;
-                } else {
-                    autoPlaySong(queue, tmp_channelId, msg);
-                }
+    let qual = (queue.songs[0]._duration === 'LIVE') ? '95' : 'highestaudio';
+    stream = ytdl('https://www.youtube.com/watch?v=' + id, {
+        audioonly: true,
+        quality: qual
+    });
+    streamDispatcher = voiceConnection.playStream(stream, {
+        volume: 0.75
+    });
+    let sent;
+    streamDispatcher.on('start', () => {
+        voiceConnection.player.streamingData.pausedTime = 0;
+        if (!isLooping) {
+            message.channel.send('**`Now Playing: 🎧 ' + queue.songs[0]._name + '!`**').then(msg => {
+                sent = msg;
+            });
+        }
+    });
+    streamDispatcher.on('end', () => {
+        if (sent) {
+            sent.delete(50);
+        }
+        var temp = queue.shiftSong();
+        if (isLooping) {
+            queue.unshiftSong(temp);
+        } else if (isQueueLooping) {
+            queue.addSong(temp);
+        }
+        if (queue.isEmpty()) {
+            if (!isAutoPlaying) {
+                voiceConnection.player.destroy();
+                resetStatus();
             } else {
-                if (!isLooping) {
-                    msg.channel.send('Now Playing: **`🎧 ' + queue.songs[0]._name + '`**!');
-                }
-                setTimeout(function () {
-                    playMusic(queue, queue.songs[0]._id, message);
-                }, 50);
+                autoPlaySong(queue, tmp_channelId, message);
             }
-        });
+        } else {
+            setTimeout(() => {
+                playMusic(queue, queue.songs[0]._id, message);
+            }, 100);
+        }
     });
 }
 
@@ -310,7 +327,7 @@ function RNG(range) {
 function autoPlay(message) {
     if (!isAutoPlaying) {
         isAutoPlaying = true;
-        message.member.voiceChannel.join();
+        createVoiceConnection(message);
         message.channel.send("**`📻 YUI's PABX MODE - ON! 🎶 - with you wherever you go.`**");
     } else {
         isAutoPlaying = false;
@@ -383,11 +400,12 @@ function resetStatus() {
     isLooping = false;
     isPause = false;
     if (isPlaying) {
+        if (streamDispatcher) {
+            streamDispatcher.end();            
+        }
         isPlaying = false;
-        if (streamDispatcher !== undefined) {
-            streamDispatcher.end();
-            streamDispatcher = undefined;
-        }        
+        streamDispatcher = undefined;
+        voiceConnection = undefined;
     }
 }
     
