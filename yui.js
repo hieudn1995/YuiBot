@@ -100,7 +100,7 @@ bot.on("message", async (message) => {
       }
       break;
     }
-    case 'queue': {
+    case 'queue': case 'q': {
       if (utilCommands.checkChannel(message, false)) {
         if (queue.isEmpty()) {
           return message.channel.send("There's nothing to play around here. How about adding something ?");
@@ -137,12 +137,10 @@ bot.on("message", async (message) => {
       break;
     }
     case 'shuffle': {
-      if (message.member.voiceChannel) {
         if (utilCommands.checkChannel(message, false)) {
           musicCommands.shuffle_queue(queue);
           return message.channel.send(':twisted_rightwards_arrows: **`QUEUE shuffled!`**');
         }
-      }
       break;
     }
     case 'remove': {
@@ -152,12 +150,10 @@ bot.on("message", async (message) => {
       break;
     }
     case 'clear': {
-      if (message.member.voiceChannel) {
-        if (utilCommands.checkChannel(message, false)) {
-          queue.clearQueue();
-          return message.channel.send(":x: **Queue cleared!**");
-        }
-      }
+       if (utilCommands.checkChannel(message, false)) {
+         queue.clearQueue();
+         return message.channel.send(":x: **Queue cleared!**");
+       }
       break;
     }
     case 'search': {
