@@ -85,6 +85,7 @@ async function getItems(queue, id, nextPageToken, message, oldQueueLength, origi
                                 isPlaying = true;
                                 playMusic(queue, queue.songs[0]._id, originalMessage);
                                 originalMessage.channel.send('**`🎶 Playlist starting - NOW! 🎶`**');
+                                getChannelID_pl(queue.last()._id);
                             }
                         }
                     }, 50);
@@ -100,6 +101,7 @@ async function getItems(queue, id, nextPageToken, message, oldQueueLength, origi
                                 isPlaying = true;
                                 playMusic(queue, queue.songs[0]._id, originalMessage);
                                 originalMessage.channel.send('**`🎶 Playlist starting - NOW! 🎶`**');
+                                getChannelID_pl(queue.last()._id);
                             }
                         }
                     }, 50);
