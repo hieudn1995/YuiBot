@@ -140,8 +140,7 @@ function adminCommands(message, args) {
         let action = args.shift().toLowerCase();
         let mem = message.mentions.members.first();
         let testFormat = args.shift();     
-        if (mem && mem == testFormat) {            
-            //let mem = message.guild.member(member);            
+        if (mem && mem == testFormat) {
             let reason = args.join(" ");
             switch (action) {
                 case 'kick': {
@@ -180,11 +179,10 @@ function adminCommands(message, args) {
                         });
                         break;
                     }
-                case 'setnickname': {
-                    let nick = args.shift();                
+                case 'setnickname': {                
                     let oldname  = mem.displayName;
-                    mem.setNickname(nick).then(() => {
-                        message.channel.send("`" + oldname + "'s` nickname is set to `" + nick + "` by `" + message.member.displayName + "`");
+                    mem.setNickname(reason).then(() => {
+                        message.channel.send("`" + oldname + "'s` nickname is set to `" + reason + "` by `" + message.member.displayName + "`");
                     }).catch(err => {
                         message.author.send("Unable to set nickname. I don't have enough permissions.");
                         console.log(err);
