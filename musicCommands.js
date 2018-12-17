@@ -123,7 +123,7 @@ function queueSong(message, queue, args) {
     let temp_status = '';
     getID(args, async function (id) {
         await ytdlGetInfo(queue, id, requester).then(async () => {
-            tmp_channelId = getChannelID_pl(queue.last()._id);
+            getChannelID_pl(id);
             if (isPlaying === false) {
                 isPlaying = true;
                 playMusic(queue, id, message);
@@ -252,11 +252,9 @@ function search_list(query, queue, message) {
             if (json.items[0]) {
                 var id_box = [];
                 var name_box = [];
-                var channelIdbox = [];
                 json.items.forEach((e) => {
                     id_box.push(e.id.videoId);
                     name_box.push(e.snippet.title);
-                    channelIdbox.push(e.snippet.channelId);
                 });
                 let temp1 = "```css\nPick one option from the list below, or type cancel to break.\n\n";
                 for (let i = 0; i < name_box.length; i++) {
@@ -280,7 +278,6 @@ function search_list(query, queue, message) {
                         let index = collected.content.trim().split(" ");
                         if (!isNaN(index) && (index > 0 && index <= 10)) {
                             let id_search = id_box[index - 1];
-                            tmp_channelId = channelIdbox[index - 1];
                             queueSong(message, queue, id_search);
                         } else {
                             message.channel.send('Invailid option! Action aborted.')
@@ -324,11 +321,16 @@ function RNG(range) {
     });
 }
 
-function autoPlay(message) {
+function autoPlay(queue, message) {
     if (!isAutoPlaying) {
         isAutoPlaying = true;
         createVoiceConnection(message);
         message.channel.send("**`📻 YUI's PABX MODE - ON! 🎶 - with you wherever you go.`**");
+        if (!queue.isEmpty()) {
+            getChannelID_pl(queue.last()._id);
+        } else {
+            message.channel.send("*Ok, now where do we start? How about you add something first? XD*");
+        }
     } else {
         isAutoPlaying = false;
         message.channel.send("**`📻 YUI's PABX MODE - OFF! 🎵`**");
