@@ -74,7 +74,7 @@ async function getItems(queue, id, nextPageToken, message, oldQueueLength, origi
                     originalMessage.channel.send('Got error, code: ' + json.error.code + ', with message: ' + json.error.message);
                     return console.error(json.error);
                 }
-                await processData(json.items, queue, originalMessage.author.username).then(() => {
+                await processData(json.items, queue, originalMessage.member.displayName).then(() => {
                     setTimeout(async () => {
                         if (json.nextPageToken) {
                             let nextPage = "&pageToken=" + json.nextPageToken;
@@ -121,7 +121,7 @@ function processData(data, queue, requester) {
 
 function queueSong(message, queue, args) {
     createVoiceConnection(message);
-    var requester = message.author.username;
+    var requester = message.member.displayName;
     let temp_status = '';
     getID(args, async function (id) {
         await ytdlGetInfo(queue, id, requester).then(async () => {
@@ -159,7 +159,7 @@ function addNext(message, queue, args) {
         if (isYtlink(args) && args.indexOf('list=') > -1) {
             return message.channel.send("Currently cannot add playlist to next. Use `>play` instead.");
         }
-        var requester = message.author.username;
+        var requester = message.member.displayName;
         getID(args, async (id) => {
             await ytdlGetInfoNext(queue, id, requester).then(async () => {
                 var np_box = "*`Channel`*: **`" + queue.getAt(1)._channel + "`**" +
@@ -359,7 +359,7 @@ function autoPlaySong(queue, channelId_related, msg) {
             if (json.error) return console.error(json.error);
             await RNG(json.items.length).then(async (rnd) => {
                 if (json.items[rnd]) {
-                    await ytdlGetInfo(queue, json.items[rnd].id.videoId, msg.author.username).then(() => {
+                    await ytdlGetInfo(queue, json.items[rnd].id.videoId, msg.msg.member.displayName).then(() => {
                         playMusic(queue, queue.songs[0]._id, msg);
                     }, (error) => {
                         autoPlaySong(queue, channelId_related, msg);
