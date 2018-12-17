@@ -7,7 +7,6 @@ const musicQueue = require('./musicQueue.js');
 const musicCommands = require('./musicCommands.js');
 const utilCommands = require('./Utilities.js');
 const prefix  = process.env.PREFIX;
-const OwnerID = process.env.OWNER_ID;
 const bot_token = process.env.BOT_TOKEN;
 var queue = new musicQueue;
 var leaveOnTimeOut = undefined;
@@ -187,7 +186,13 @@ bot.on("message", async (message) => {
       return utilCommands.tenorGIF(args, message);
     }
     case 'admin': {
-      return utilCommands.adminCommands(message, args);
+      message.delete().then(sent => {  
+        utilCommands.adminCommands(sent, args);
+      }).catch(err => {
+        message.author.send("Unable to delete the message due to permissions missing.");
+        console.log(err);
+      });
+      break;
     }
     case 'help': {
       return utilCommands.help(message, bot);
