@@ -138,10 +138,10 @@ function googleTranslate(query, src_lang, des_lang, message) {
 function adminCommands(message, args) {
     if (isMyOwner(message.author.id) || message.member.hasPermission(['BAN_MEMBERS', 'KICK_MEMBERS'], false, true, true)) {
         let action = args.shift().toLowerCase();
-        let user = message.mentions.users.first();        
-        if (user) {            
-            let mem = message.guild.member(user);
-            args.shift();
+        let user = message.mentions.users.first();
+        let testFormat = args.shift();     
+        if (user && user === testFormat) {            
+            let mem = message.guild.member(user);            
             let reason = args.join(" ");
             switch (action) {
                 case 'kick': {
@@ -193,7 +193,7 @@ function adminCommands(message, args) {
                 }
             }
         } else {
-            message.author.send("Please mention a user to perform actions.");
+            message.author.send("Wrong format. (`>admin <action> <@mention> <?reason>`)");
         }
     } else {
         return message.author.send("You don't have the required permissions to perform this action.");
