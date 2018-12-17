@@ -34,11 +34,9 @@ bot.on('voiceStateUpdate', (oldMem, newMem) => {
       }
     case 'leave': {
         if (oldMem.voiceChannel.members.size === 1) {
-          leaveOnTimeOut = setTimeout(() => {
-            if (musicCommands.isPlaying) {
-              queue.deleteQueue();
-              musicCommands.resetStatus();
-            }
+          leaveOnTimeOut = setTimeout(() => {            
+            queue.deleteQueue();
+            musicCommands.resetStatus();            
             utilCommands.leaveVC(oldMem);
           }, 30000);
         }
