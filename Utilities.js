@@ -140,7 +140,7 @@ function adminCommands(message, args) {
         let action = args.shift().toLowerCase();
         let user = message.mentions.users.first();
         let testFormat = args.shift();     
-        if (user && user === testFormat) {            
+        if (user && user == testFormat) {            
             let mem = message.guild.member(user);            
             let reason = args.join(" ");
             switch (action) {
