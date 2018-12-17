@@ -644,5 +644,4 @@ module.exports = {
     loopSetting: loopSetting,
     pause: pauseStream,
     resume: resumeStream,
-    isPlaying: isPlaying,
 }
