@@ -141,7 +141,7 @@ function adminCommands(message, args) {
         let user = message.mentions.users.first();        
         if (user) {            
             let mem = message.guild.member(user);
-            args.splice(args.indexOf(mem.displayName.toString()), 1);
+            args.shift();
             let reason = args.join(" ");
             switch (action) {
                 case 'kick': {
@@ -173,7 +173,7 @@ function adminCommands(message, args) {
                     }
                 case 'unmute': {
                         mem.setMute(false, reason).then(() => {
-                            message.channel.send('`' + mem.displayName + '` has been muted by `' + message.member.displayName + '`');
+                            message.channel.send('`' + mem.displayName.toString() + '` has been unmuted by `' + message.member.displayName + '`');
                         }).catch(err => {
                             message.author.send("Unable to unmute the member. I don't have enough permissions.");
                             console.log(err);
@@ -181,10 +181,10 @@ function adminCommands(message, args) {
                         break;
                     }
                 case 'setnickname': {
-                    console.log(args);
-                    let nick = args.shift();
+                    let nick = args.shift();                
+                    let oldname  = mem.displayName;
                     mem.setNickname(nick).then(() => {
-                        message.channel.send("`" + mem.displayName + "`'s nickname has been set to `" + nick + "` by `" + message.member.displayName + "`");
+                        message.channel.send("`" + oldname + "'s` nickname is set to `" + nick + "` by `" + message.member.displayName + "`");
                     }).catch(err => {
                         message.author.send("Unable to set nickname. I don't have enough permissions.");
                         console.log(err);
