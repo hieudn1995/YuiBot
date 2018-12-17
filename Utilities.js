@@ -138,10 +138,10 @@ function googleTranslate(query, src_lang, des_lang, message) {
 function adminCommands(message, args) {
     if (isMyOwner(message.author.id) || message.member.hasPermission(['BAN_MEMBERS', 'KICK_MEMBERS'], false, true, true)) {
         let action = args.shift().toLowerCase();
-        let user = message.mentions.users.first();
+        let member = message.mentions.members.first();
         let testFormat = args.shift();     
         if (user && user == testFormat) {            
-            let mem = message.guild.member(user);            
+            let mem = message.guild.member(member);            
             let reason = args.join(" ");
             switch (action) {
                 case 'kick': {
