@@ -63,7 +63,7 @@ bot.on("message", async (message) => {
     }
     case 'skip' : case 'next': {
       if (utilCommands.checkChannel(message, false)) {
-        if (queue.length() === 0) {
+        if (queue.isEmpty()) {
           return message.reply('Nothing is playing!');
         } else {
           return musicCommands.skip_songs(message, queue, args);
@@ -89,7 +89,7 @@ bot.on("message", async (message) => {
     }
     case 'np' : case 'nowplaying': {
       if (utilCommands.checkChannel(message, false)) {
-        if (queue.length() === 0) {
+        if (queue.isEmpty()) {
           return message.reply('Nothing is playing!');
         } else {
           return musicCommands.nowPlaying(queue.songs[0], message, bot);
