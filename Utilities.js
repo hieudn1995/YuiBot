@@ -4,6 +4,7 @@ const discord = require('discord.js');
 
 const tenor_key = process.env.TENOR_KEY;
 const anon_id = process.env.ANON_ID;
+const OwnerID = process.env.OWNER_ID;
 
 var boundTextChannel = undefined;
 var boundVoiceChannel = undefined;
