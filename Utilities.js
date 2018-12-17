@@ -139,14 +139,14 @@ function adminCommands(message, args) {
     if (isMyOwner(message.author.id) || message.member.hasPermission(['BAN_MEMBERS', 'KICK_MEMBERS'], false, true, true)) {
         let action = args.shift().toLowerCase();
         let user = message.mentions.users.first();        
-        if (user) {
-            args.splice(args.indexOf(user.toString()), 1);
-            let reason = args.join(" ");
+        if (user) {            
             let mem = message.guild.member(user);
+            args.splice(args.indexOf(mem.displayName.toString()), 1);
+            let reason = args.join(" ");
             switch (action) {
                 case 'kick': {
                         mem.kick(reason).then((mem) => {
-                            message.channel.send('`' + mem.user.username + '` has been kicked by `' + message.author.username + '` for reason: ' + reason);
+                            message.channel.send('`' + mem.user.username + '` has been kicked by `' + message.member.displayName + '` for reason: ' + reason);
                         }).catch(err => {
                             message.author.send("Unable to kick the member. I don't have enough permissions.");
                             console.log(err);
@@ -155,7 +155,7 @@ function adminCommands(message, args) {
                     }
                 case 'ban': {
                         mem.ban(reason).then((mem) => {
-                            message.channel.send('`' + mem.user.username + '` has been banned by `' + message.author.username + '` for reason: ' + reason);
+                            message.channel.send('`' + mem.user.username + '` has been banned by `' + message.member.displayName + '` for reason: ' + reason);
                         }).catch(err => {
                             message.author.send("Unable to ban the member. I don't have enough permissions.");
                             console.log(err);
@@ -164,7 +164,7 @@ function adminCommands(message, args) {
                     }
                 case 'mute': {
                         mem.setMute(true, reason).then(() => {
-                            message.channel.send('`' + mem.user.username + '` has been muted by `' + message.author.username + '` for reason: ' + reason);
+                            message.channel.send('`' + mem.displayName + '` has been muted by `' + message.member.displayName + '` for reason: ' + reason);
                         }).catch(err => {
                             message.author.send("Unable to mute the member. I don't have enough permissions.");
                             console.log(err);
@@ -173,7 +173,7 @@ function adminCommands(message, args) {
                     }
                 case 'unmute': {
                         mem.setMute(false, reason).then(() => {
-                            message.channel.send('`' + mem.user.username + '` has been muted by `' + message.author.username + '`');
+                            message.channel.send('`' + mem.displayName + '` has been muted by `' + message.member.displayName + '`');
                         }).catch(err => {
                             message.author.send("Unable to unmute the member. I don't have enough permissions.");
                             console.log(err);
@@ -181,9 +181,10 @@ function adminCommands(message, args) {
                         break;
                     }
                 case 'setnickname': {
+                    console.log(args);
                     let nick = args.shift();
                     mem.setNickname(nick).then(() => {
-                        message.channel.send("`" + mem.user.username + "`'s nickname has been set to `" + nick + "` by `" + message.author.username + "`");
+                        message.channel.send("`" + mem.displayName + "`'s nickname has been set to `" + nick + "` by `" + message.member.displayName + "`");
                     }).catch(err => {
                         message.author.send("Unable to set nickname. I don't have enough permissions.");
                         console.log(err);
