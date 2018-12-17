@@ -162,14 +162,9 @@ bot.on("message", async (message) => {
       }
       break;
     }
-    case 'autoplay': {
+     case 'autoplay': case 'ap': {
       if (utilCommands.checkChannel(message, true)) {
-        musicCommands.autoPlay(message);
-        if (!queue.isEmpty()) {
-          return musicCommands.getChannelID_pl(queue.last()._id);
-        } else {
-          return message.channel.send("*Ok, now where do we start? How about you add something first? XD*");
-        }
+        musicCommands.autoPlay(queue, message);
       }
       break;
     }
