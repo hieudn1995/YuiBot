@@ -233,26 +233,26 @@ function isMyOwner(UserID)
 }
 
 function help(message, bot) {
-    let commands = "**__Music:__**\n`play | p`(add to end)\n" +
-        "`pnext | pn` (add to next)\n" +
-        "`skip | next <?range>`\n" +
-        "`leave | bye`\n" +
-        "`join | come`\n" +
-        "`queue <?number>`\n" +
-        "`np | nowplaying`\n" +
-        "`loop <?queue>`\n" +
-        "`pause`\n" +
-        "`resume`\n" +
-        "`shuffle`\n" +
-        "`clear`\n" +
-        "`search`\n" +
-        "`autoplay | ap` (auto play)\n" +
-        "`remove <index> <?range>`\n" +
-        "`stop`\n\n" +
-        "**__Ultilities:__**\n`admin <kick/ban/mute/unmute/setnickname> <@mention> <?reason>`\n" +
-        "`tenor`\n" +
-        "`ping`\n" +
-        "`say`(limit to admin/owner)\n\n";
+    let commands = "**__Music:__**\n`play | p`: add to end\n" +
+        "`pnext | pn`: add to next\n" +
+        "`skip | next <?range>`: skip a or some song(s)\n" +
+        "`leave | bye`: leave the bot\n" +
+        "`join | come`: join the bot\n" +
+        "`queue <?number>`: list out the queue at tab number (default 0)\n" +
+        "`np | nowplaying`: currently playing song's info\n" +
+        "`loop <?queue>`: loop the song/queue\n" +
+        "`pause`: pause the song\n" +
+        "`resume`: resume pause\n" +
+        "`shuffle`: shuffle the queue\n" +
+        "`clear`: clear queue\n" +
+        "`search`: search for a song, pick by index\n" +
+        "`autoplay | ap`: from current Youtube channel, random limit: 50 songs\n" +
+        "`remove <index> <?range>`: remove a/some song(s)\n" +
+        "`stop`: clear queue and stop playing\n\n" +
+        "**__Ultilities:__**\n`admin <kick/ban/mute/unmute/setnickname> <@mention> <?reason>`: admin commands\n" +
+        "`tenor`: tenor GIFs, random limit: 5\n" +
+        "`ping`: connection's status\n" +
+        "`say`(limit to admin/owner): repeat what you say\n\n";
     message.author.send({
         embed: new discord.RichEmbed()
             .setAuthor('Yui-chan', bot.user.avatarURL)
