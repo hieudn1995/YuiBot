@@ -257,7 +257,6 @@ function help(message, bot) {
         embed: new discord.RichEmbed()
             .setAuthor('Yui-chan', bot.user.avatarURL)
             .setColor(colorCodeYui)
-            .setURL('https://cdn.discordapp.com/attachments/413313406993694728/463714313719513088/commandlist.txt')
             .setTitle("Command List")
             .setDescription(commands)
             .setFooter("Note: <>: obligatory param | <?> optional param | Permission: `BAN_MEMBERS` or above")
