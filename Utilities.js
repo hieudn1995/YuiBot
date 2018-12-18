@@ -233,13 +233,34 @@ function isMyOwner(UserID)
 }
 
 function help(message, bot) {
-    message.author.send("Here's my commands and info", {
+    let commands = "**__Music:__**\n`play | p`(add to end)\n" +
+        "`pnext | pn` (add to next)\n" +
+        "`skip | next <?range>`\n" +
+        "`leave | bye`\n" +
+        "`join | come`\n" +
+        "`queue <?number>`\n" +
+        "`np | nowplaying`\n" +
+        "`loop <?queue>`\n" +
+        "`pause`\n" +
+        "`resume`\n" +
+        "`shuffle`\n" +
+        "`clear`\n" +
+        "`search`\n" +
+        "`autoplay | ap` (auto play)\n" +
+        "`remove <index> <?range>`\n" +
+        "`stop`\n\n" +
+        "**__Ultilities:__**\n`admin <kick/ban/mute/unmute/setnickname> <@mention> <?reason>`\n" +
+        "`tenor`\n" +
+        "`ping`\n" +
+        "`say`(limit to admin/owner)\n\n";
+    message.author.send({
         embed: new discord.RichEmbed()
             .setAuthor('Yui-chan', bot.user.avatarURL)
             .setColor(colorCodeYui)
             .setURL('https://cdn.discordapp.com/attachments/413313406993694728/463714313719513088/commandlist.txt')
-            .setTitle("Yui's command list, just a .txt file")
-            .setDescription("OHTSUKI YUI from THE IDOLM@STER CINDERELLA GIRLS: STARLIGHT STAGE. Yoroshiku nee~!!! XD")
+            .setTitle("Command List")
+            .setDescription(commands)
+            .setFooter("Note: <>: obligatory param | <?> optional param | Permission: `BAN_MEMBERS` or above")
     });
 }
 
