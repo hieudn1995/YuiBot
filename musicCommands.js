@@ -133,9 +133,9 @@ function queueSong(message, queue, args) {
             } else {
                 temp_status = '♬ Added To QUEUE ♬';
             }
-            var np_box = "*`Channel`*: **`" + queue.last()._channel + "`**\n*`Duration`*: **`" + await time_converter(queue.last()._duration) + "`**" +
+            let np_box = "*`Channel`*: **`" + queue.last()._channel + "`**\n*`Duration`*: **`" + await time_converter(queue.last()._duration) + "`**" +
                 ((queue.length() === 1) ? "" : ("\n*`Position in queue`*: **`" + (queue.length() - 1) + "`**"));
-            var embed = new discord.RichEmbed()
+            let embed = new discord.RichEmbed()
                 .setTitle(queue.last()._name)
                 .setAuthor(temp_status, message.author.avatarURL)
                 .setDescription(np_box)
@@ -144,7 +144,7 @@ function queueSong(message, queue, args) {
                 .setTimestamp()
                 .setURL(queue.last()._vidUrl)
                 .setFooter('Requested by ' + requester)
-            message.channel.send(embed);
+            message.channel.send({ embed });
         }, (error) => {
             console.log(error);
         });
@@ -162,10 +162,10 @@ function addNext(message, queue, args) {
         let requester = message.member.displayName;
         getID(args, async (id) => {
             await ytdlGetInfoNext(queue, id, requester).then(async () => {
-                var np_box = "*`Channel`*: **`" + queue.getAt(1)._channel + "`**" +
+                let np_box = "*`Channel`*: **`" + queue.getAt(1)._channel + "`**" +
                     "\n*`Duration`*: **`" + await time_converter(queue.getAt(1)._duration) + "`**" +
                     "\n*`Position in queue`*: **`1`**";
-                var embed = new discord.RichEmbed()
+                let embed = new discord.RichEmbed()
                     .setTitle(queue.getAt(1)._name)
                     .setAuthor("♬ Added Next ♬", message.author.avatarURL)
                     .setDescription(np_box)
@@ -174,7 +174,7 @@ function addNext(message, queue, args) {
                     .setTimestamp()
                     .setURL(queue.getAt(1)._vidUrl)
                     .setFooter('Requested by ' + requester)
-                message.channel.send(embed);
+                message.channel.send({ embed });
             }).catch(error => {
                 message.channel.send("Oops! Sorry, something went wrong. I couldn't get the song.");
                 console.error(error);
