@@ -195,8 +195,9 @@ function adminCommands(message, args) {
                             if (!mem.roles.has(role[0])) {
                                 mem.addRole(role[0]).then(() => {
                                     message.channel.send("Added role `" + role[1] + "` to `" + mem.displayName + "` by `" + message.member.displayName + "`");
-                                }).catch(() => { 
+                                }).catch(err => { 
                                     message.author.send("Something went wrong. Maybe i don't have enough permission to do this. ");
+                                    console.error(err);
                                 });
 
                             } else {
@@ -213,8 +214,9 @@ function adminCommands(message, args) {
                             if (mem.roles.has(role[0])) {
                                 mem.removeRole(role[0]).then(() => {
                                     message.channel.send("Removed role `" + role[1] + "` from `" + mem.displayName + "` by `" + message.member.displayName + "`");
-                                }).catch(() => { 
+                                }).catch((err) => { 
                                     message.author.send("Something went wrong. Maybe i don't have enough permission to do this. ");
+                                    console.log(err);
                                 });
 
                             } else {
