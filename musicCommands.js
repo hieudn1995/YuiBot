@@ -51,7 +51,7 @@ function isYtlink(str) {
 async function queuePlaylist(message, queue, args) {
     createVoiceConnection(message);
     try {
-        await getPlaylistId(args, function (playlist_id) {
+        getPlaylistId(args, function (playlist_id) {
             message.channel.send(":hourglass_flowing_sand: **_Loading playlist, please wait..._**").then(async msg => {
                 let nextPageToken = '';
                 let oldQueueLength = queue.length();
@@ -159,7 +159,7 @@ function addNext(message, queue, args) {
         if (isYtlink(args) && args.indexOf('list=') > -1) {
             return message.channel.send("Currently cannot add playlist to next. Use `>play` instead.");
         }
-        var requester = message.member.displayName;
+        let requester = message.member.displayName;
         getID(args, async (id) => {
             await ytdlGetInfoNext(queue, id, requester).then(async () => {
                 var np_box = "*`Channel`*: **`" + queue.getAt(1)._channel + "`**" +
@@ -230,7 +230,7 @@ function search_video(query, callback) {
     request("https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=2&q=" + encodeURIComponent(query) +
         "&type=video&fields=items(id(kind%2CvideoId)%2Csnippet(channelId%2CchannelTitle%2Ctitle))&key=" + ytapikey,
         function (error, response, body) {
-            var json = JSON.parse(body);
+            let json = JSON.parse(body);
             if (!json.items[0]) {
                 tmp_channelId = 'UCSYy7SB18wxodxpI8TgBq3A';
                 callback("3uOWvcFLUY0");
@@ -246,7 +246,7 @@ function search_list(query, queue, message) {
         '&type=video&fields=items(id%2Ckind%2Csnippet(channelId%2CchannelTitle%2Ctitle))&key=' + ytapikey,
         function (err, respond, body) {
             if (err) return console.error(err);
-            var json = JSON.parse(body);
+            let json = JSON.parse(body);
             if (json.error) {
                 message.channel.send('Got error, code: ' + json.error.code + ' with message: ' + json.error.message);
                 return console.error(json.error);
@@ -344,7 +344,7 @@ function getChannelID_pl(id) {
         '&type=video&fields=items%2Fsnippet%2FchannelId&key=' + ytapikey,
         function (err, respond, body) {
             if (err) return console.error(err);
-            var json = JSON.parse(body);
+            let json = JSON.parse(body);
             if (json.error) return console.error(json.error);
             tmp_channelId = json.items[0].snippet.channelId;
         });
@@ -355,7 +355,7 @@ function autoPlaySong(queue, channelId_related, msg) {
         '&maxResults=50&type=video&fields=items(id%2Ckind%2Csnippet(channelId%2CchannelTitle%2Ctitle))&key=' + ytapikey,
         async (err, respond, body) => {
             if (err) return console.error(err);
-            var json = JSON.parse(body);
+            let json = JSON.parse(body);
             if (json.error) return console.error(json.error);
             await RNG(json.items.length).then(async (rnd) => {
                 if (json.items[rnd]) {
@@ -438,7 +438,7 @@ function loopSetting(message, args) {
 }
 
 function shuffle_queue(queue) {
-    for (var i = queue.length() - 1; i > 1; i--) {
+    for (let i = queue.length() - 1; i > 1; i--) {
         let j = Math.floor(Math.random() * (i)) + 1;
         let temp = queue.songs[i];
         queue.songs[i] = queue.songs[j];
@@ -447,7 +447,7 @@ function shuffle_queue(queue) {
 }
 async function check_queue(queue, message, args) {
     if (queue.isEmpty()) return message.channel.send('**`Nothing in queue.`**');
-    var n = queue.length();
+    let n = queue.length();
     let tabs = Math.ceil((n - 1) / 10);
     if (tabs === 0) tabs = 1;
     if (!args[0] || args[0] === 1) {
@@ -456,13 +456,13 @@ async function check_queue(queue, message, args) {
             let t3 = "---------------QUEUE LIST-----------------\n";
             t2 += t3;
             if (n <= 10) {
-                for (var i = 1; i < n; i++) {
-                    var temp = "#" + (i) + ": " + queue.songs[i]._name + "\n[Requested by " + queue.songs[i]._requester + "]\n\n";
+                for (let i = 1; i < n; i++) {
+                    let temp = "#" + (i) + ": " + queue.songs[i]._name + "\n[Requested by " + queue.songs[i]._requester + "]\n\n";
                     t2 += temp;
                 }
             } else {
-                for (var i = 1; i <= 10; i++) {
-                    var temp = "#" + (i) + ": " + queue.songs[i]._name + "\n[Requested by " + queue.songs[i]._requester + "]\n\n";
+                for (let i = 1; i <= 10; i++) {
+                    let temp = "#" + (i) + ": " + queue.songs[i]._name + "\n[Requested by " + queue.songs[i]._requester + "]\n\n";
                     t2 += temp;
                 }
                 t2 += "And another " + (n - 11) + " songs.\n";
@@ -482,8 +482,8 @@ async function check_queue(queue, message, args) {
         let t = Number(args[0]);
         let pos = (t - 1) * 10 + 1;
         let t1 = " ```css\n---------------QUEUE LIST-----------------\n";
-        for (var i = pos; i < (pos + 10) && i < n; i++) {
-            var temp = "#" + (i) + ": " + queue.songs[i]._name + "\n[Requested by " + queue.songs[i]._requester + "]\n\n";
+        for (let i = pos; i < (pos + 10) && i < n; i++) {
+            let temp = "#" + (i) + ": " + queue.songs[i]._name + "\n[Requested by " + queue.songs[i]._requester + "]\n\n";
             t1 += temp;
         }
         let qlength;
@@ -569,7 +569,7 @@ async function getNowPlayingData(currSong, message, bot) {
     let np_box = "**`" + await time_converter(t) + "`𝗹" +
         await create_progressbar(t, currSong._duration) + "𝗹`" +
         await time_converter(currSong._duration) + "`**\n__`Channel`__: **`" + currSong._channel + "`**";
-    var embed = new discord.RichEmbed()
+    let embed = new discord.RichEmbed()
         .setTitle(currSong._name)
         .setAuthor('♫ Now Playing ♫', bot.user.avatarURL)
         .setDescription(np_box)
