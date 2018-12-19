@@ -20,7 +20,7 @@
  - *Playing youtube live streams (24/7,...)*
  - *Ultility commands for playing music...*
  - *Posting GIFs from TENOR API*
- - *Some simple administrating commands*
+ - *Some simple administration commands*
  - *Now playing notices* 
  - *Bind and lock to a channel/Auto leave when no one's around, ...*
 
