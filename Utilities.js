@@ -220,7 +220,7 @@ function adminCommands(message, args) {
                                 });
 
                             } else {
-                                message.reply("the member doesn't have the role `" + role[1] + "`");
+                                message.author.send("the member doesn't have the role `" + role[1] + "`");
                             }
                         } else {
                             message.author.send("Invalid role. Please try gain.")
