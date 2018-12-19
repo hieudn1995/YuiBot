@@ -190,28 +190,37 @@ function adminCommands(message, args) {
                     break;
                 }
                 case 'addrole': {
-                    let role = getRoleId(message.guild.roles, reason);
-                    if (!mem.roles.has(role[0])) {
-                        mem.addRole(role[0]).then(() => {
-                            message.channel.send("Added role `" + role[1] + "` to `" + mem.displayName + "` by `" + message.member.displayName + "`");
-                        }).catch(console.error);
-                    } else {
-                        message.reply("the member has already had the role `" + role[1] + "`");
+                        let role = getRoleId(message.guild.roles, reason);
+                        if (role[0]) {
+                            if (!mem.roles.has(role[0])) {
+                                mem.addRole(role[0]).then(() => {
+                                    message.channel.send("Added role `" + role[1] + "` to `" + mem.displayName + "` by `" + message.member.displayName + "`");
+                                }).catch(console.error);
+
+                            } else {
+                                message.author.send("the member has already had the role `" + role[1] + "`");
+                            }
+                        } else {
+                            message.author.send("Invalid role. Please try gain.")
+                        }
+                        break;
                     }
-                    break;
-                }
                 case 'removerole': {
-                    let role = getRoleId(message.guild.roles, reason);
-                    if (mem.roles.has(role[0])) {
-                        mem.removeRole(role[0]).then(() => {
-                            message.channel.send("Removed role `" + role[1] + "` from `" + mem.displayName + "` by `" + message.member.displayName + "`");
-                        }).catch(console.error);
-                            
-                    } else {
-                        message.reply("the member doesn't have the role `" + role[1] + "`");
+                        let role = getRoleId(message.guild.roles, reason);
+                        if (role[0]) {
+                            if (mem.roles.has(role[0])) {
+                                mem.removeRole(role[0]).then(() => {
+                                    message.channel.send("Removed role `" + role[1] + "` from `" + mem.displayName + "` by `" + message.member.displayName + "`");
+                                }).catch(console.error);
+
+                            } else {
+                                message.reply("the member doesn't have the role `" + role[1] + "`");
+                            }
+                        } else {
+                            message.author.send("Invalid role. Please try gain.")
+                        }
+                        break;
                     }
-                    break;
-                }
             }
         } else {
             message.author.send("Wrong format. (`>admin <action> <@mention> <?reason>`)");
