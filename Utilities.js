@@ -292,7 +292,7 @@ function help(message, bot) {
         "`autoplay | ap`: from current Youtube channel, random limit: 50 songs\n" +
         "`remove <index> <?range>`: remove a/some song(s)\n" +
         "`stop`: clear queue and stop playing\n\n" +
-        "**__Ultilities:__**\n`admin <kick/ban/mute/unmute/setnickname> <@mention> <?reason>`: admin commands\n" +
+        "**__Ultilities:__**\n`admin <kick/ban/mute/unmute/setnickname/addrole/removerole> <@mention> <?reason>`: admin commands\n" +
         "`tenor`: tenor GIFs, random limit: 5\n" +
         "`ping`: connection's status\n" +
         "`say`(limit to admin/owner): repeat what you say\n\n";
