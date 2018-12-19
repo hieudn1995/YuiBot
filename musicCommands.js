@@ -69,7 +69,7 @@ async function getItems(queue, id, nextPageToken, message, oldQueueLength, origi
         request("https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50" + nextPageToken + "&playlistId=" + id +
             "&fields=items(id%2Ckind%2Csnippet(channelId%2CchannelTitle%2CresourceId(kind%2CvideoId)%2Ctitle))%2CnextPageToken&key=" + ytapikey,
             async function (error, response, body) {
-                var json = JSON.parse(body);
+                let json = JSON.parse(body);
                 if (json.error) {
                     originalMessage.channel.send('Got error, code: ' + json.error.code + ', with message: ' + json.error.message);
                     return console.error(json.error);
