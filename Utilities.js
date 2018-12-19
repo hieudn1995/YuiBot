@@ -195,7 +195,9 @@ function adminCommands(message, args) {
                             if (!mem.roles.has(role[0])) {
                                 mem.addRole(role[0]).then(() => {
                                     message.channel.send("Added role `" + role[1] + "` to `" + mem.displayName + "` by `" + message.member.displayName + "`");
-                                }).catch(console.error);
+                                }).catch(() => { 
+                                    message.author.send("Something went wrong. Maybe i don't have enough permission to do this. ");
+                                });
 
                             } else {
                                 message.author.send("the member has already had the role `" + role[1] + "`");
@@ -211,7 +213,9 @@ function adminCommands(message, args) {
                             if (mem.roles.has(role[0])) {
                                 mem.removeRole(role[0]).then(() => {
                                     message.channel.send("Removed role `" + role[1] + "` from `" + mem.displayName + "` by `" + message.member.displayName + "`");
-                                }).catch(console.error);
+                                }).catch(() => { 
+                                    message.author.send("Something went wrong. Maybe i don't have enough permission to do this. ");
+                                });
 
                             } else {
                                 message.reply("the member doesn't have the role `" + role[1] + "`");
