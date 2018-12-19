@@ -189,6 +189,29 @@ function adminCommands(message, args) {
                     });
                     break;
                 }
+                case 'addrole': {
+                    let role = getRoleId(message.guild.roles, reason);
+                    if (!mem.roles.has(role[0])) {
+                        mem.addRole(role[0]).then(() => {
+                            message.channel.send("Added role `" + role[1] + "` to `" + mem.displayName + "` by `" + message.member.displayName + "`");
+                        }).catch(console.error);
+                    } else {
+                        message.reply("the member has already had the role `" + role[1] + "`");
+                    }
+                    break;
+                }
+                case 'removerole': {
+                    let role = getRoleId(message.guild.roles, reason);
+                    if (mem.roles.has(role[0])) {
+                        mem.removeRole(role[0]).then(() => {
+                            message.channel.send("Removed role `" + role[1] + "` from `" + mem.displayName + "` by `" + message.member.displayName + "`");
+                        }).catch(console.error);
+                            
+                    } else {
+                        message.reply("the member doesn't have the role `" + role[1] + "`");
+                    }
+                    break;
+                }
             }
         } else {
             message.author.send("Wrong format. (`>admin <action> <@mention> <?reason>`)");
@@ -196,6 +219,17 @@ function adminCommands(message, args) {
     } else {
         return message.author.send("You don't have the required permissions to perform this action.");
     }
+}
+
+function getRoleId(data, search_val) {
+    let id, name;
+    data.map((val, key) => {
+        if (val.name.toLowerCase() === search_val.toLowerCase()) {
+            id = key;
+            name = val.name;
+        }
+    });
+    return [id, name];
 }
 
 function getPing(message, bot) {
