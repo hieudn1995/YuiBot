@@ -571,7 +571,7 @@ async function getNowPlayingData(currSong, message, bot) {
         await time_converter(currSong._duration) + "`**\n__`Channel`__: **`" + currSong._channel + "`**";
     let embed = new discord.RichEmbed()
         .setTitle(currSong._name)
-        .setAuthor('♫ Now Playing ♫', bot.user.avatarURL)
+        .setAuthor('♫ Now Playing ♫', 'https://cdn.discordapp.com/attachments/413313406993694728/525196421553455114/Yui_Loading_5.gif')
         .setDescription(np_box)
         .setColor(colorCodeYui)
         .setThumbnail(currSong._thumbUrl)
