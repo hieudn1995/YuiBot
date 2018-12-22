@@ -1,6 +1,6 @@
 const discord = require('discord.js');
 const bot = new discord.Client({
-  disabledEvents: ['TYPING_START', 'MESSAGE_REACTION_ADD', 'RELATIONSHIP_ADD', 'GUILD_MEMBER_UPDATE', 'RELATIONSHIP_REMOVE', 'MESSAGE_REACTION_REMOVE', 'PRESENCE_UPDATE'],
+  disabledEvents: ['TYPING_START', 'MESSAGE_REACTION_ADD', 'RELATIONSHIP_ADD', 'RELATIONSHIP_REMOVE', 'MESSAGE_REACTION_REMOVE'],
   disableEveryone: true
 });
 const musicQueue = require('./musicQueue.js');
