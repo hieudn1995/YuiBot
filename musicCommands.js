@@ -214,6 +214,7 @@ function playMusic(queue, id, message) {
         if (queue.isEmpty()) {
             if (!isAutoPlaying) {
                 voiceConnection.player.destroy();
+                voiceConnection.setSpeaking(false);
                 resetStatus();
             } else {
                 autoPlaySong(queue, tmp_channelId, message);
