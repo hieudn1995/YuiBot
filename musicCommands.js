@@ -687,9 +687,15 @@ function clearQueue(message) {
     }
 }
 function stopPlaying(message) {
-    guild = streams.get(message.guild.id)
-    guild.queue.deleteQueue();
-    resetStatus(guild.id);
+    guild = streams.get(message.guild.id);
+    if(guild.isPlaying) {
+        guild.queue.deleteQueue();
+        resetStatus(guild.id);
+        guild.boundTextChannel.send("**Stopped!**");
+    }
+    else {
+        guild.boundTextChannel.send('Nothing is playing!');
+    }
 }
 function queue_length(guild) {
     return new Promise((resolve) => {
