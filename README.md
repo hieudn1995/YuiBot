@@ -1,6 +1,6 @@
 # Yui-chanBOT
 
-**Multi-servers NodeJS Discord bot with playing music ability and ultilities for administration and entertaining.**
+**NodeJS Discord bot with playing music ability and ultilities for administration and entertaining.**
 
 **References:**
  - https://developer.mozilla.org/en-US/docs/Learn/JavaScript 
