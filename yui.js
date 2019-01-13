@@ -3,23 +3,17 @@ const bot = new discord.Client({
   disabledEvents: ['TYPING_START', 'MESSAGE_REACTION_ADD', 'RELATIONSHIP_ADD', 'RELATIONSHIP_REMOVE', 'MESSAGE_REACTION_REMOVE'],
   disableEveryone: true,
 });
-const fs = require('fs');
 const musicCommands = require('./musicCommands.js');
 const utilCommands = require('./Utilities.js');
-// const ytapikey = process.env.YT_API_KEY;
-// const prefix  = process.env.PREFIX;
-// const OwnerID = process.env.OWNER_ID;
-// const bot_token = process.env.BOT_TOKEN;
-// const tenor_key = process.env.TENOR_KEY;
-// const anon_id = process.env.ANON_ID;
-var config = JSON.parse(fs.readFileSync('./config.json', 'utf-8'));
-const prefix = config.prefix;
-const bot_token = config.token;
+
+const prefix  = process.env.PREFIX;
+const bot_token = process.env.BOT_TOKEN;
 var leaveOnTimeOut = undefined;
-console.log('Launching Yui-chan...')
+
+console.log('Launching Yui-chan...');
+
 bot.on('ready', () => {
   console.log('Yui is online!');
-  //console.log();
   bot.user.setActivity('📻 Radio Happy', {
     url: 'https://twitch.tv/onlypolaris',
     type: 'STREAMING',
@@ -57,13 +51,13 @@ bot.on("message", (message) => {
   switch (command) {
     case 'play': case 'p': {
       if (musicCommands.checkChannel(message, true)) {
-        return musicCommands.play(bot, message, args);
+          return musicCommands.play(bot, message, args);
       }
       break;
     }
     case 'pn': case 'pnext': {
       if (musicCommands.checkChannel(message, true)) {
-        return musicCommands.addNext(bot, message, args);
+          return musicCommands.addNext(bot, message, args);
       }
       break;
     }
@@ -75,7 +69,7 @@ bot.on("message", (message) => {
     }
     case 'join': case 'come': {
       if (musicCommands.checkChannel(message, true)) {
-        return message.channel.send(" :loudspeaker: Kawaii **Yui-chan** is here~! xD");
+          return message.channel.send(" :loudspeaker: Kawaii **Yui-chan** is here~! xD");
       }
       break;
     }
@@ -163,9 +157,6 @@ bot.on("message", (message) => {
     case 'say': {
       return utilCommands.say(args, message);
     }
-   case 'translate': {
-      return utilCommands.translate(args, message, bot)
-    }
     case 'tenor': {
       return utilCommands.tenorGIF(args, message);
     }
@@ -180,10 +171,6 @@ bot.on("message", (message) => {
     }
     case 'help': {
       return utilCommands.help(message, bot);
-    }
-    default : {
-      message.channel.send("What do you mean by `>" + command + "`? How about taking a look at `>help`?.");
-      break;
     }
   }
 });
