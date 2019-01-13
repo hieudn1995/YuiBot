@@ -751,6 +751,9 @@ function create_progressbar(num_progress, num_total) {
         return t.substr(0, index) + '⦿' + t.substr(index + 1);
     }
 }
+//Converting Youtube Data API v3 ISO 8601 date time string to seconds in JS/Node
+//https://stackoverflow.com/questions/22148885/converting-youtube-data-api-v3-video-duration-format-to-seconds-in-javascript-no
+//Thank you Paul Rad for this excellent solution!
 function youtubeTimeConverter(duration) {
     return new Promise((resolve) => {
         var a = duration.match(/\d+/g);
