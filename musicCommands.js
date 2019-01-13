@@ -79,19 +79,15 @@ function checkOnLeave(oldMem, newMem) {
         let oldStat = oldMem.voiceChannel;
         let newStat = newMem.voiceChannel;
         if (newStat === boundVC) {
-            console.log('clear');
             return 'clear';
         } else
         if (!oldStat || oldStat !== boundVC) {
-            console.log('ignore');
             return 'ignore';
         } else
         if (!newStat || newStat !== boundVC) {
-            console.log('leave');
             return 'leave';
         }
     } else {
-        console.log('ignore');
         return 'ignore';
     }
 }
