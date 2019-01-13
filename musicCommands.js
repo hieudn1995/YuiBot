@@ -489,7 +489,7 @@ function loopSettings(message, args) {
     } else if (args[0].toLowerCase() === 'queue') {
         if (!guild.isQueueLooping) {
             guild.isQueueLooping = true;
-            guild.boundTextChannel.channel.send(' :repeat: _**Queue loop enabled!**_');
+            guild.boundTextChannel.send(' :repeat: _**Queue loop enabled!**_');
         } else {
             guild.isQueueLooping = false;
             guild.boundTextChannel.send(' :twisted_rightwards_arrows: _**Queue loop disabled!**_');
