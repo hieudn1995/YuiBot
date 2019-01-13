@@ -1,253 +1,357 @@
 const discord = require('discord.js');
 const request = require('request');
 const ytdl = require('ytdl-core');
-const song = require('./songMetaData');
 const getPlaylistID = require('get-youtube-playlist-id');
 const getYoutubeID = require('get-youtube-id');
-const ytapikey = process.env.YOUTUBE_API_KEY;
+const fs = require('fs');
+const song = require('./songMetaData');
+const musicQueue = require('./musicQueue');
+
+var config = JSON.parse(fs.readFileSync('./config.json', 'utf-8'));
+
+const ytapikey = config.ytapikey;
+
+//const ytapikey = process.env.YOUTUBE_API_KEY;
 const colorCodeYui = 'FFA000';
+var streams = new Map;
+/**
+ * @param {string} id 
+ * @param {VoiceChannel} boundVoiceChannel 
+ * @param {TextChannel} boundTextChannel 
+ * @property {isLooping, isQueueLooping, isAutoplaying, isPlaying, isPaused}
+ * @property {streamDispatcher, voiceConnection, tmp_channelId, queue}
+ * @property {boundVoiceChannel, boundTextChannel}
+ */
+function pushStream(guild, boundVoiceChannel, boundTextChannel) {
+    return streams.set(guild.id, {
+        id: guild.id,
+        name: guild.name,
+        isLooping: false,
+        isQueueLooping: false,
+        isAutoPlaying: false,
+        isPlaying: false,
+        isPaused: false,
+        streamDispatcher: undefined,
+        voiceConnection: undefined,
+        tmp_channelId: '',
+        queue: new musicQueue,
+        boundVoiceChannel: boundVoiceChannel,
+        boundTextChannel: boundTextChannel
+    });
+}
 
-var isAutoPlaying = false;
-var isLooping = false;
-var isQueueLooping = false;
-var isPlaying = false;
-var streamDispatcher = undefined;
-var voiceConnection = undefined;
-var isPause = false;
-var tmp_channelId = '';
+function checkBoundChannel(message, join) {
+    let boundVC = streams.has(message.guild.id) ? streams.get(message.guild.id).boundVoiceChannel : undefined;
+    if (message.member.voiceChannel) {
+        if (!boundVC && join) {
+            let bound_vc = message.member.voiceChannel;
+            let bound_tc = message.channel;
+            message.channel.send("Bound to Text Channel: **`" + bound_vc.name + "`** and Voice Channel: **`" + bound_tc.name + "`**!");
+            bound_vc.join();
+            pushStream(message.guild, bound_vc, bound_tc);
+            return true;
+        } else {
+            if (boundVC) {
+                let bound_vc = streams.get(message.guild.id).boundVoiceChannel;
+                let bound_tc = streams.get(message.guild.id).boundTextChannel;
+                if (message.channel === bound_tc && message.member.voiceChannel === bound_vc) {
+                    return true;
+                } else message.reply("I'm playing at **`" + bound_tc.name + "`** -- **`" + bound_vc.name + "`**");
+            } else {
+                message.reply("I'm not in any voice channel.");
+            }
+            return false;
+        }
+    } else {
+        message.reply("*please join a __Voice Channel__!*");
+        return false;
+    }
+}
+function resetChannelStat(guildId) {
+    guild = streams.get(guildId);
+    guild.boundTextChannel = undefined;
+    guild.boundVoiceChannel = undefined;
+}
+function leaveVC(member) {
+    guild = streams.get(member.guild.id);
+    guild.boundVoiceChannel.leave();
+    guild.boundTextChannel.send("*There's no one around so I'll leave too. Bye~!*");
+    resetStatus(guild.id);
+    resetChannelStat(guild.id);
+    streams.delete(guild.id);
+}
+function checkOnLeave(oldMem, newMem) {
+    let boundVC = (streams.has(oldMem.guild.id)) ? streams.get(oldMem.guild.id).boundVoiceChannel : undefined;
+    if (boundVC) {
+        let oldStat = oldMem.voiceChannel;
+        let newStat = newMem.voiceChannel;
+        if (newStat === boundVC) {
+            console.log('clear');
+            return 'clear';
+        } else
+        if (!oldStat || oldStat !== boundVC) {
+            console.log('ignore');
+            return 'ignore';
+        } else
+        if (!newStat || newStat !== boundVC) {
+            console.log('leave');
+            return 'leave';
+        }
+    } else {
+        console.log('ignore');
+        return 'ignore';
+    }
+}
 
-function createVoiceConnection(message) {
-    if (voiceConnection) {
+function createVoiceConnection(guild, bot) {
+    //guild = streams.get(message.guild.id);
+    if (guild.voiceConnection) {
         return;
     } else {
-        message.member.voiceChannel.join().then(Connection => {
-            voiceConnection = Connection;
-        });
+        guild.voiceConnection = bot.voiceConnections.get(guild.id);
     }
+    //got Voice Connection.
 }
 
-function play(message, queue, args) {
+function play(bot, message, args) {    
+    guild = streams.get(message.guild.id);
+    createVoiceConnection(guild, bot);
     args = args.join(" ");
     if (isYtlink(args) && args.indexOf('list=') > -1) {
-        queuePlaylist(message, queue, args);
+        queuePlaylist(guild, message, args);
     } else {
-        queueSong(message, queue, args);
+        queueSong(guild, message, args); //this worked
     }
 }
-
-function getPlaylistId(args, callback) {
-    if (!isYtlink(args)) {
-        throw new Error('Argument is not a youtube link.');
-    } else {
-        callback(getPlaylistID(args));
-    }
-}
-
-function isYtlink(str) {
-    if (typeof str === 'string') {
-        return (str.indexOf('youtube.com') >= 0) || (str.indexOf('youtu.be') >= 0);
-    } else return false;
-}
-async function queuePlaylist(message, queue, args) {
-    createVoiceConnection(message);
+async function queuePlaylist(guild, message, args) {
     try {
-        getPlaylistId(args, function (playlist_id) {
-            message.channel.send(":hourglass_flowing_sand: **_Loading playlist, please wait..._**").then(async msg => {
+        await getPlaylistId(args, function (playlistID) {
+            guild.boundTextChannel.send(":hourglass_flowing_sand: **_Loading playlist, please wait..._**").then(async (msg) => {
                 let nextPageToken = '';
-                let oldQueueLength = queue.length();
-                await getItems(queue, playlist_id, nextPageToken, msg, oldQueueLength, message);
-            });
+                let oldQueueLength = guild.queue.length;
+                await getItems(guild, playlistID, nextPageToken, msg, oldQueueLength, message.member.displayName).catch(console.error);
+            }).catch(console.error);
         });
     } catch (err) {
-        message.channel.send("Sorry, something went wrong and i couldn't get the playlist.");
+        guild.boundTextChannel.send("Sorry, something went wrong and i couldn't get the playlist.");
         return console.error(err);
     }
 }
 
-async function getItems(queue, id, nextPageToken, message, oldQueueLength, originalMessage) {
-    return new Promise((resolve) => {
-        request("https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50" + nextPageToken + "&playlistId=" + id +
+
+function getItems(guild, playlistID, nextPageToken, msgTemp, oldQueueLength, requester) {
+    return new Promise((resolve, reject) => {
+        request("https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50" + nextPageToken + "&playlistId=" + playlistID +
             "&fields=items(id%2Ckind%2Csnippet(channelId%2CchannelTitle%2CresourceId(kind%2CvideoId)%2Ctitle))%2CnextPageToken&key=" + ytapikey,
             async function (error, response, body) {
-                let json = JSON.parse(body);
+                if (error) return reject(error);
+                var json = JSON.parse(body);
                 if (json.error) {
-                    originalMessage.channel.send('Got error, code: ' + json.error.code + ', with message: ' + json.error.message);
-                    return console.error(json.error);
+                    return reject(json.error);
                 }
-                await processData(json.items, queue, originalMessage.member.displayName).then(() => {
-                    setTimeout(async () => {
-                        if (json.nextPageToken) {
-                            let nextPage = "&pageToken=" + json.nextPageToken;
-                            await getItems(queue, id, nextPage, message, oldQueueLength, originalMessage).then(resolve);
-                        } else {
-                            message.edit(":white_check_mark: **Enqueued " + (queue.length() - oldQueueLength) + " songs!**");
-                            if (isPlaying === false) {
-                                isPlaying = true;
-                                playMusic(queue, queue.songs[0]._id, originalMessage);
-                                originalMessage.channel.send('**`🎶 Playlist starting - NOW! 🎶`**');
-                                getChannelID_pl(queue.last()._id);
-                            }
+                await processData(guild.queue, json.items, requester).then(async () => {
+                    if (json.nextPageToken) {
+                        let nextPage = "&pageToken=" + json.nextPageToken;
+                        await getItems(guild, playlistID, nextPage, msgTemp, oldQueueLength, requester).then(resolve).catch(console.log);
+                    } else {
+                        msgTemp.edit(":white_check_mark: **Enqueued " + (guild.queue.length - oldQueueLength) + " songs!**");
+                        if (guild.isPlaying === false) {
+                            guild.isPlaying = true;
+                            playMusic(guild);
+                            guild.boundTextChannel.send('**`🎶 Playlist starting - NOW! 🎶`**');
+                            getChannelID_pl(guild);
                         }
-                    }, 50);
-                }, (msg) => {
+                    }
+                }, async (msg) => {
                     console.error(msg);
-                    setTimeout(async () => {
-                        if (json.nextPageToken) {
-                            let nextPage = "&pageToken=" + json.nextPageToken;
-                            await getItems(queue, id, nextPage, message, oldQueueLength, originalMessage).then(resolve);
-                        } else {
-                            message.edit(":white_check_mark: **Enqueued " + (queue.length() - oldQueueLength) + " songs!**");
-                            if (isPlaying === false) {
-                                isPlaying = true;
-                                playMusic(queue, queue.songs[0]._id, originalMessage);
-                                originalMessage.channel.send('**`🎶 Playlist starting - NOW! 🎶`**');
-                                getChannelID_pl(queue.last()._id);
-                            }
+                    if (json.nextPageToken) {
+                        let nextPage = "&pageToken=" + json.nextPageToken;
+                        await getItems(guild, playlistID, nextPage, msgTemp, oldQueueLength, requester).then(resolve).catch(console.log);
+                    } else {
+                        msgTemp.edit(":white_check_mark: **Enqueued " + (guild.queue.length - oldQueueLength) + " songs!**");
+                        if (guild.isPlaying === false) {
+                            guild.isPlaying = true;
+                            playMusic(guild);
+                            guild.boundTextChannel.send('**`🎶 Playlist starting - NOW! 🎶`**');
+                            getChannelID_pl(guild);
                         }
-                    }, 50);
+                    }
+
                 });
             });
     });
 }
-
-function processData(data, queue, requester) {
+function processData(queue, data, requester) {
     return new Promise((resolve, reject) => {
-            var promises = data.map(async function (e) {
-                await ytdlGetInfo(queue, e.snippet.resourceId.videoId, requester).catch(err => console.error(err));
-            });
-            Promise.all(promises).then(resolve).catch(err => reject(err));
+        var tmparr = [];
+        for (const e of data) {
+            tmparr.push(e.snippet.resourceId.videoId);
+        }
+        Promise.all(tmparr).then(async () => {
+            await getInfoIds(queue, tmparr.join(','), requester, true).then(resolve).catch(console.error);
+        }).catch(err => reject(err));
     });
 }
 
-function queueSong(message, queue, args) {
-    createVoiceConnection(message);
-    var requester = message.member.displayName;
+function getInfoIds(queue, ids, requester, atEnd) {
+    return new Promise((resolve, reject) => {
+        request('https://www.googleapis.com/youtube/v3/videos?part=' + encodeURIComponent('snippet, contentDetails') + '&id=' + encodeURIComponent(ids) + '&fields=items(contentDetails%2Fduration%2Cid%2Csnippet(channelId%2CchannelTitle%2Cthumbnails%2Fdefault%2Ctitle))&key=' + ytapikey,
+            async function (err, res, body) {
+                if (err) reject(err);
+                var json = JSON.parse(body);
+                var promises = json.items.map((e) => {
+                    pushToQueue(queue, e, requester, atEnd).catch(console.error);
+                });
+                Promise.all(promises).then(resolve).catch(console.error);
+            });
+    });
+}
+
+function pushToQueue(queue, data, requester, atEnd) {
+    return new Promise(async (resolve, reject) => {
+        if (!data.id) reject("Video not available.");
+        else {
+            let id = data.id,
+                title = data.snippet.title,
+                channel = data.snippet.channelTitle,
+                duration = await youtubeTimeConverter(data.contentDetails.duration),
+                vidUrl = "https://www.youtube.com/watch?v=" + id,
+                thumbUrl = data.snippet.thumbnails.default.url;
+            if(atEnd) { resolve(queue.addSong(new song(id, title, channel, duration, requester, vidUrl, thumbUrl))); }
+            else { resolve(queue.addNext(new song(id, title, channel, duration, requester, vidUrl, thumbUrl))); }
+        }
+    });
+}
+
+function queueSong(guild, message, args) {
+    let requester = message.member.displayName;
+    queue = guild.queue;
     let temp_status = '';
     getID(args, async function (id) {
-        await ytdlGetInfo(queue, id, requester).then(async () => {
-            getChannelID_pl(id);
-            if (isPlaying === false) {
-                isPlaying = true;
-                playMusic(queue, id, message);
+        await getInfoIds(queue, id, requester, true).then(async () => {
+            getChannelID_pl(guild);
+            if (guild.isPlaying === false) {
+                guild.isPlaying = true;
+                playMusic(guild);
                 temp_status = '♫ Now Playing ♫';
             } else {
                 temp_status = '♬ Added To QUEUE ♬';
             }
-            let np_box = "*`Channel`*: **`" + queue.last()._channel + "`**\n*`Duration`*: **`" + await time_converter(queue.last()._duration) + "`**" +
-                ((queue.length() === 1) ? "" : ("\n*`Position in queue`*: **`" + (queue.length() - 1) + "`**"));
-            let embed = new discord.RichEmbed()
-                .setTitle(queue.last()._name)
+            var np_box = "*`Channel`*: **`" + queue.last._channel + "`**\n*`Duration`*: **`" + await time_converter(queue.last._duration) + "`**" +
+                ((queue.length === 1) ? "" : ("\n*`Position in queue`*: **`" + (queue.length - 1) + "`**"));
+            var embed = new discord.RichEmbed()
+                .setTitle(queue.last.title)
                 .setAuthor(temp_status, message.author.avatarURL)
                 .setDescription(np_box)
                 .setColor(colorCodeYui)
-                .setThumbnail(queue.last()._thumbUrl)
+                .setThumbnail(queue.last.thumbnailUrl)
                 .setTimestamp()
-                .setURL(queue.last()._vidUrl)
+                .setURL(queue.last.videoUrl)
                 .setFooter('Requested by ' + requester)
-            message.channel.send({ embed });
+            message.channel.send(embed);
         }, (error) => {
             console.log(error);
         });
     });
+    //this worked
 }
 
-function addNext(message, queue, args) {
-    if (queue.isEmpty() || !isPlaying) {
-        return queueSong(message, queue, args);
+function addNext(bot, message, args) {
+    guild = streams.get(message.guild.id);
+    queue = guild.queue;
+    if (!guild.isPlaying || queue.isEmpty()) {
+        return play(bot, message, args);
     } else {
         args = args.join(" ");
         if (isYtlink(args) && args.indexOf('list=') > -1) {
-            return message.channel.send("Currently cannot add playlist to next. Use `>play` instead.");
+            return guild.boundTextChannel.send("Currently cannot add playlist to next. Use `>play` instead.");
         }
-        let requester = message.member.displayName;
+        var requester = message.member.displayName;
         getID(args, async (id) => {
-            await ytdlGetInfoNext(queue, id, requester).then(async () => {
-                let np_box = "*`Channel`*: **`" + queue.getAt(1)._channel + "`**" +
-                    "\n*`Duration`*: **`" + await time_converter(queue.getAt(1)._duration) + "`**" +
+            await getInfoIds(queue, id, requester, false).then(async () => {
+                var np_box = "*`Channel`*: **`" + queue.getAt(1).channel + "`**" +
+                    "\n*`Duration`*: **`" + await time_converter(queue.getAt(1).duration) + "`**" +
                     "\n*`Position in queue`*: **`1`**";
-                let embed = new discord.RichEmbed()
-                    .setTitle(queue.getAt(1)._name)
+                var embed = new discord.RichEmbed()
+                    .setTitle(queue.getAt(1).titile)
                     .setAuthor("♬ Added Next ♬", message.author.avatarURL)
                     .setDescription(np_box)
                     .setColor(colorCodeYui)
-                    .setThumbnail(queue.getAt(1)._thumbUrl)
+                    .setThumbnail(queue.getAt(1).thumbnailUrl)
                     .setTimestamp()
-                    .setURL(queue.getAt(1)._vidUrl)
+                    .setURL(queue.getAt(1).videoUrl)
                     .setFooter('Requested by ' + requester)
-                message.channel.send({ embed });
+                guild.boundTextChannel.send(embed);
             }).catch(error => {
-                message.channel.send("Oops! Sorry, something went wrong. I couldn't get the song.");
+                guild.boundTextChannel.send("Oops! Sorry, something went wrong. I couldn't get the song.");
                 console.error(error);
             });
         });
     }
 }
 
-function playMusic(queue, id, message) {
-    let qual = (queue.songs[0]._duration === 'LIVE') ? '95' : 'highestaudio';
-    stream = ytdl('https://www.youtube.com/watch?v=' + id, {
+function playMusic(guild) {
+    let currSong = guild.queue.getAt(0);
+    let qual = (currSong.duration === 'LIVE') ? '95' : 'highestaudio';
+    stream = ytdl('https://www.youtube.com/watch?v=' + currSong.id, {
         audioonly: true,
         quality: qual
     });
-    streamDispatcher = voiceConnection.playStream(stream, {
+    guild.streamDispatcher = guild.voiceConnection.playStream(stream, {
         volume: 0.75
     });
     let sent;
-    streamDispatcher.on('start', () => {
-        voiceConnection.player.streamingData.pausedTime = 0;
-        if (!isLooping) {
-            message.channel.send('**`Now Playing: 🎧 ' + queue.songs[0]._name + '!`**').then(msg => {
+    guild.streamDispatcher.on('start', () => {
+        guild.voiceConnection.player.streamingData.pausedTime = 0;
+        if (!guild.isLooping) {
+            guild.boundTextChannel.send('**`Now Playing: 🎧 ' + guild.queue.getAt(0).title + '!`**').then(msg => {
                 sent = msg;
             });
         }
     });
-    streamDispatcher.on('end', () => {
-        if (sent) {
-            sent.delete(50);
+    guild.streamDispatcher.on('end', () => {
+        if (sent) { sent.delete(50); }
+        var temp = guild.queue.shiftSong();
+        if (guild.isLooping) {
+            guild.queue.unshiftSong(temp);
+        } else if (guild.isQueueLooping) {
+            guild.queue.addSong(temp);
         }
-        var temp = queue.shiftSong();
-        if (isLooping) {
-            queue.unshiftSong(temp);
-        } else if (isQueueLooping) {
-            queue.addSong(temp);
-        }
-        if (queue.isEmpty()) {
-            if (!isAutoPlaying) {
-                voiceConnection.player.destroy();
-                voiceConnection.setSpeaking(false);
-                resetStatus();
+        if (guild.queue.isEmpty()) {
+            if (!guild.isAutoPlaying) {
+                guild.voiceConnection.setSpeaking(false);
+                resetStatus(guild.id);
             } else {
-                autoPlaySong(queue, tmp_channelId, message);
+                autoPlaySong(guild, temp.requester);
             }
         } else {
-            setTimeout(() => {
-                playMusic(queue, queue.songs[0]._id, message);
-            }, 100);
+            playMusic(guild);
         }
     });
+    //WORKED!
 }
 
 function search_video(query, callback) {
     request("https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=2&q=" + encodeURIComponent(query) +
         "&type=video&fields=items(id(kind%2CvideoId)%2Csnippet(channelId%2CchannelTitle%2Ctitle))&key=" + ytapikey,
         function (error, response, body) {
-            let json = JSON.parse(body);
+            var json = JSON.parse(body);
             if (!json.items[0]) {
-                tmp_channelId = 'UCSYy7SB18wxodxpI8TgBq3A';
+                //tmp_channelId = 'UCSYy7SB18wxodxpI8TgBq3A';
                 callback("3uOWvcFLUY0");
             } else {
-                tmp_channelId = json.items[0].snippet.channelId;
+                //tmp_channelId = json.items[0].snippet.channelId;
                 callback(json.items[0].id.videoId);
             }
         });
 }
 
-function search_list(query, queue, message) {
+function searchSong(bot, query, message) {
     request('https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=' + encodeURIComponent(query) +
         '&type=video&fields=items(id%2Ckind%2Csnippet(channelId%2CchannelTitle%2Ctitle))&key=' + ytapikey,
         function (err, respond, body) {
             if (err) return console.error(err);
-            let json = JSON.parse(body);
+            var json = JSON.parse(body);
             if (json.error) {
                 message.channel.send('Got error, code: ' + json.error.code + ' with message: ' + json.error.message);
                 return console.error(json.error);
@@ -281,7 +385,7 @@ function search_list(query, queue, message) {
                         let index = collected.content.trim().split(" ");
                         if (!isNaN(index) && (index > 0 && index <= 10)) {
                             let id_search = id_box[index - 1];
-                            queueSong(message, queue, id_search);
+                            return play(bot, message, id_search);
                         } else {
                             message.channel.send('Invailid option! Action aborted.')
                         }
@@ -293,30 +397,8 @@ function search_list(query, queue, message) {
             }
         });
 }
-async function ytdlGetInfo(queue, id, requester) {
-    return new Promise((resolve, reject) => {
-        ytdl.getInfo(id, (err, info) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(queue.addSong(new song(info.video_id, info.title, info.author.name,
-                        info.length_seconds, requester, info.video_url, info.thumbnail_url)));
-            }
-        });
-    });
-}
-async function ytdlGetInfoNext(queue, id, requester) {
-    return new Promise((resolve, reject) => {
-        ytdl.getInfo(id, (err, info) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(queue.addNext(new song(info.video_id, info.title, info.author.name,
-                    info.length_seconds, requester, info.video_url, info.thumbnail_url)));
-            }
-        });
-    });
-}
+
+
 //auto play music
 function RNG(range) {
     return new Promise(resolve => {
@@ -324,46 +406,46 @@ function RNG(range) {
     });
 }
 
-function autoPlay(queue, message) {
-    if (!isAutoPlaying) {
-        isAutoPlaying = true;
-        createVoiceConnection(message);
-        message.channel.send("**`📻 YUI's PABX MODE - ON! 🎶 - with you wherever you go.`**");
-        if (!queue.isEmpty()) {
-            getChannelID_pl(queue.last()._id);
+function autoPlay(message, bot) {
+    guild = streams.get(message.guild.id);
+    if (!guild.isAutoPlaying) {
+        guild.isAutoPlaying = true;
+        createVoiceConnection(guild, bot);
+        guild.boundTextChannel.send("**`📻 YUI's PABX MODE - ON! 🎶 - with you wherever you go.`**");
+        if (!guild.queue.isEmpty()) {
+            getChannelID_pl(guild);
         } else {
-            message.channel.send("*Ok, now where do we start? How about you add something first? XD*");
+            guild.boundTextChannel.send("*Ok, now where do we start? How about you add something first? XD*");
         }
     } else {
-        isAutoPlaying = false;
-        message.channel.send("**`📻 YUI's PABX MODE - OFF! 🎵`**");
+        guild.isAutoPlaying = false;
+        guild.boundTextChannel.send("**`📻 YUI's PABX MODE - OFF! 🎵`**");
     }
 }
 
-function getChannelID_pl(id) {
-    request('https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=1&relatedToVideoId=' + id +
-        '&type=video&fields=items%2Fsnippet%2FchannelId&key=' + ytapikey,
+function getChannelID_pl(guild) {
+    request('https://www.googleapis.com/youtube/v3/videos?part=snippet&id=' + guild.queue.last.id + '&fields=items%2Fsnippet%2FchannelId&key=' + ytapikey,
         function (err, respond, body) {
             if (err) return console.error(err);
-            let json = JSON.parse(body);
+            var json = JSON.parse(body);
             if (json.error) return console.error(json.error);
-            tmp_channelId = json.items[0].snippet.channelId;
+            guild.tmp_channelId = json.items[0].snippet.channelId;
         });
 }
-
-function autoPlaySong(queue, channelId_related, msg) {
+async function autoPlaySong(guild , requester) {
     request('https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=' + channelId_related +
         '&maxResults=50&type=video&fields=items(id%2Ckind%2Csnippet(channelId%2CchannelTitle%2Ctitle))&key=' + ytapikey,
         async (err, respond, body) => {
             if (err) return console.error(err);
-            let json = JSON.parse(body);
+            var json = JSON.parse(body);
             if (json.error) return console.error(json.error);
             await RNG(json.items.length).then(async (rnd) => {
                 if (json.items[rnd]) {
-                    await ytdlGetInfo(queue, json.items[rnd].id.videoId, msg.msg.member.displayName).then(() => {
-                        playMusic(queue, queue.songs[0]._id, msg);
+                    await getInfoIds(guild.queue, json.items[rnd].id.videoId, requester, true).then(() => {
+                        playMusic(guild);
+                        //msg.channel.send("**`🎧 Auto Play - Now:`** **_`🎵" + queue.songs[0]._name + "🎵`_**");
                     }, (error) => {
-                        autoPlaySong(queue, channelId_related, msg);
+                        autoPlaySong(guild, requester);
                         return console.error(error);
                     });
                 }
@@ -372,219 +454,284 @@ function autoPlaySong(queue, channelId_related, msg) {
 }
 
 function pauseStream(message) {
-    if (streamDispatcher) {
-        if (!isPause) {
-            streamDispatcher.pause();
-            isPause = true;
-            message.channel.send(" :pause_button: **Paused!**");
+    guild = streams.get(message.guild.id);
+    if (guild.streamDispatcher) {
+        if (!guild.isPaused) {
+            guild.streamDispatcher.pause();
+            guild.isPaused = true;
+            guild.boundTextChannel.send(" :pause_button: **Paused!**");
         } else {
-            message.channel.send("*Currently paused!*");
+            guild.boundTextChannel.send("*Currently paused!*");
         }
     } else {
-        message.channel.send("I'm not playing anything.");
+        guild.boundTextChannel.send("I'm not playing anything.");
     }
 }
 
 function resumeStream(message) {
-    if (streamDispatcher) {
-        if (isPause) {
-            streamDispatcher.resume();
-            isPause = false;
-            message.channel.send(" :arrow_forward: **Continue playing~!**");
+    guild = streams.get(message.guild.id);
+    if (guild.streamDispatcher) {
+        if (guild.isPaused) {
+            guild.streamDispatcher.resume();
+            guild.isPaused = false;
+            guild.boundTextChannel.send(" :arrow_forward: **Continue playing~!**");
         } else {
-            message.channel.send("*Currently playing!*");
+            guild.boundTextChannel.send("*Currently playing!*");
         }
     } else {
-        message.channel.send("I'm not playing anything.");
+        guild.boundTextChannel.send("I'm not playing anything.");
     }
 }
 
-function resetStatus() {
-    isAutoPlaying = false;
-    isQueueLooping = false;
-    isLooping = false;
-    isPause = false;
-    if (isPlaying) {
-        if (streamDispatcher) {
-            streamDispatcher.end();            
+function resetStatus(guildId) {
+    guild = streams.get(guildId);
+    if(guild) {
+        guild.isAutoPlaying = false;
+        guild.isQueueLooping = false;
+        guild.isLooping = false;
+        guild.isPause = false;
+        guild.queue.deleteQueue();
+        if (guild.isPlaying) {
+            if (guild.streamDispatcher) {
+                guild.voiceConnection.player.destroy();
+                guild.streamDispatcher.end();
+            }
+            guild.isPlaying = false;
         }
-        isPlaying = false;
-        streamDispatcher = undefined;
-        voiceConnection = undefined;
+    } else { 
+        return console.log("Something went wrong."); 
     }
 }
-    
 
-function loopSetting(message, args) {
-    if (!args[0]) {
-        if (!isLooping) {
-            isLooping = true;
-            message.channel.send(' :repeat: _**Loop enabled!**_');
+function loopSettings(message, args) {
+    guild = streams.get(message.guild.id);
+    if (guild && !args[0]) {
+        if (!guild.isLooping) {
+            guild.isLooping = true;
+            guild.boundTextChannel.send(' :repeat: _**Loop enabled!**_');
         } else {
-            isLooping = false;
-            message.channel.send(' :twisted_rightwards_arrows: _**Loop disabled!**_');
+            guild.isLooping = false;
+            guild.boundTextChannel.send(' :twisted_rightwards_arrows: _**Loop disabled!**_');
         }
     } else if (args[0].toLowerCase() === 'queue') {
-        if (!isQueueLooping) {
-            isQueueLooping = true;
-            message.channel.send(' :repeat: _**Queue loop enabled!**_');
+        if (!guild.isQueueLooping) {
+            guild.isQueueLooping = true;
+            guild.boundTextChannel.channel.send(' :repeat: _**Queue loop enabled!**_');
         } else {
-            isQueueLooping = false;
-            message.channel.send(' :twisted_rightwards_arrows: _**Queue loop disabled!**_');
+            guild.isQueueLooping = false;
+            guild.boundTextChannel.send(' :twisted_rightwards_arrows: _**Queue loop disabled!**_');
         }
     } else {
-        message.channel.send('Invailid option, action aborted!');
-        return;
+        guild.boundTextChannel.send('Invailid option, action aborted!');        
     }
 }
 
-function shuffle_queue(queue) {
-    for (let i = queue.length() - 1; i > 1; i--) {
-        let j = Math.floor(Math.random() * (i)) + 1;
-        let temp = queue.songs[i];
-        queue.songs[i] = queue.songs[j];
-        queue.songs[j] = temp;
+function shuffleQueue(message) {
+    guild = streams.get(message.guild.id);
+    if(!guild.queue.isEmpty()) {
+        guild.queue.shuffle();
+        guild.boundTextChannel.send(':twisted_rightwards_arrows: **QUEUE shuffled!**');
+    } else {
+        guild.boundTextChannel.send("I'm not playing anything!");
     }
 }
-async function check_queue(queue, message, args) {
-    if (queue.isEmpty()) return message.channel.send('**`Nothing in queue.`**');
-    let n = queue.length();
+
+function printData(queue, start, end, border) {
+    return new Promise(async (resolve) => {
+        var result = "";
+        for (let i = start; i <= end && i < border; i++) {
+            let s = queue.getAt(i);
+            result += "#" + (i) + ": **" + s.title + "** - `("+ await time_converter(s.duration) + ")`" + "\n*Requested by `" + s.requester + "`*\n\n";
+        }
+        resolve(result);
+    });
+}
+
+async function check_queue(message, args) {
+    guild = streams.get(message.guild.id);
+    if (guild.queue.isEmpty()) {
+        return guild.boundTextChannel.send('**`Nothing in queue.`**');
+    }
+    var n = guild.queue.length;
     let tabs = Math.ceil((n - 1) / 10);
     if (tabs === 0) tabs = 1;
     if (!args[0] || args[0] === 1) {
-        let t2 = " ```css\n---------------NOW PLAYING---------------\n🎶 " + queue.songs[0]._name + " 🎶\n[Requested by " + queue.songs[0]._requester + "]\n\n";
+        let np = guild.queue.getAt(0);
+        let data = "**__NOW PLAYING:__**\n**`🎶` " + np.title + " `🎶`** - `("+ await time_converter(np.duration) + ")`\n*Requested by `" + np.requester + "`*\n\n";
         if (n > 1) {
-            let t3 = "---------------QUEUE LIST-----------------\n";
-            t2 += t3;
+            data += "**__QUEUE LIST:__**\n";
             if (n <= 10) {
-                for (let i = 1; i < n; i++) {
-                    let temp = "#" + (i) + ": " + queue.songs[i]._name + "\n[Requested by " + queue.songs[i]._requester + "]\n\n";
-                    t2 += temp;
-                }
+                data += await printData(guild.queue, 1, n - 1, n);
             } else {
-                for (let i = 1; i <= 10; i++) {
-                    let temp = "#" + (i) + ": " + queue.songs[i]._name + "\n[Requested by " + queue.songs[i]._requester + "]\n\n";
-                    t2 += temp;
-                }
-                t2 += "And another " + (n - 11) + " songs.\n";
+                data += await printData(guild.queue, 1, 10, n);
+                data += "And another `" + (n - 11) + "` songs.\n";
             }
         }
         let qlength;
-        if (isQueueLooping) {
+        if (guild.isQueueLooping) {
             qlength = 'QUEUE Looping';
         } else {
-            qlength = await time_converter(await queue_length(queue));
+            qlength = await time_converter(await queue_length(guild));
         }
-        t2 += "Total QUEUE length: [" + qlength + "]  --   Tab: [1/" + tabs + "]";
-        t2 += "```";
-        message.channel.send(t2);
+        data += "**" + guild.name + "'s** total queue duration: `" + qlength + "` -- Tab: `1/" + tabs + "`";
+        guild.boundTextChannel.send({
+            embed: new discord.RichEmbed()
+            .setColor(colorCodeYui)
+            .setDescription(data)
+        });
     } else if ((args[0] > tabs) || isNaN(args[0])) return;
     else {
-        let t = Number(args[0]);
-        let pos = (t - 1) * 10 + 1;
-        let t1 = " ```css\n---------------QUEUE LIST-----------------\n";
-        for (let i = pos; i < (pos + 10) && i < n; i++) {
-            let temp = "#" + (i) + ": " + queue.songs[i]._name + "\n[Requested by " + queue.songs[i]._requester + "]\n\n";
-            t1 += temp;
-        }
+        let currTab = Number(args[0]);
+        let pos = (currTab - 1) * 10 + 1;
+        let data = "**__QUEUE LIST:__**\n";
+        data += await printData(guild.queue, pos, pos + 9, n);
         let qlength;
-        if (isQueueLooping) {
-            qlength = 'QUEUE Looping';
+        if (guild.isQueueLooping) {
+            qlength = "QUEUE Looping";
         } else {
-            qlength = await time_converter(await queue_length(queue));
+            qlength = await time_converter(await queue_length(guild));
         }
-        t1 += "Total QUEUE length: [" + qlength + "]  -- Tab: [" + t + "/" + tabs + "]";
-        t1 += "```";
-        message.channel.send(t1);
+        data += "**" + guild.name + "'s** total queue duration: `" + qlength + "` -- Tab: `" + currTab + "/" + tabs + "`";
+        guild.boundTextChannel.send({
+            embed: new discord.RichEmbed()
+            .setColor(colorCodeYui)
+            .setDescription(data)
+        });
     }
 }
 
-function skip_songs(message, queue, args) {
-    if (!args[0]) {
-        if (isLooping) {
-            isLooping = false;
-        }
-        message.channel.send(" :fast_forward: **Skipped!**");
-        if (streamDispatcher) {
-            streamDispatcher.end();
-        }
-    } else if (isNaN(args[0])) {
-        message.channel.send('Invailid option! Action aborted.');
-        return;
+function skip_songs(message, args) {
+    guild = streams.get(message.guild.id);
+    if (guild.queue.isEmpty()) {
+        return guild.boundTextChannel.send('Nothing is playing.');
     } else {
-        let t = Number(args[0]);
-        if (t < 0 || t > queue.length()) {
-            return message.channel.send('Index out of range! Please choose a valid one, use `>queue` for checking.');
-        }
-        queue.spliceSongs(1, t);
-        if (isLooping) {
-            isLooping = false;
-        }
-        message.channel.send(" :fast_forward: **Skipped " + t + " songs!**");
-        if (streamDispatcher) {
-            streamDispatcher.end();
+        switch (args.length) {
+            case 0:
+                {
+                    if (guild.isLooping) {
+                        guild.isLooping = false;
+                    }
+                    if (guild.streamDispatcher) {
+                        guild.boundTextChannel.send(" :fast_forward: **Skipped!**");
+                        guild.streamDispatcher.end();
+                    }
+                    break;
+                }
+            case 1:
+                {
+                    if(!isNaN(args[0])) {
+                        let t = Number(args[0]);
+                        if (t < 0 || t > guild.queue.length) {
+                            return guild.boundTextChannel.send('Index out of range! Please choose a valid one, use `>queue` for checking.');
+                        }
+                        guild.queue.spliceSongs(1, t);
+                        if (guild.isLooping) {
+                            guild.isLooping = false;
+                        }                        
+                        if (guild.streamDispatcher) {
+                            guild.boundTextChannel.send(" :fast_forward: **Skipped " + t + " songs!**");
+                            guild.streamDispatcher.end();
+                        }
+                    } else {
+                        guild.boundTextChannel.send("Please enter a number!");
+                    }
+                    break;
+                }
         }
     }
 }
 
-function remove_songs(message, queue, args) {
-    if (!args[0]) {
-        message.channel.send("Please choose certain song(s) from QUEUE to remove.");
-        return;
-    } else if (args.length === 1) {
-        let index = args[0];
-        if (isNaN(index)) {
-            if (index = 'last') {
-                message.channel.send('**`' + queue.popLast() + '` has been removed from QUEUE!**');
-            } else {
-                message.channel.send('Invailid option! Action aborted.');
-                return;
+function remove_songs(message, args) {
+    guild = streams.get(message.guild.id);
+    switch (args.length) {
+        case 0:
+            {
+                return guild.boundTextChannel.send("Please choose certain song(s) from QUEUE to remove.");
             }
-        } else {
-            Number(index);
-            if (index < 0 || index > queue.length()) {
-                return message.channel.send('Index out of range! Please choose a valid one, use `>queue` for checking.');
-            } else if (index === 0) {
-                return skip_songs(message, queue, args);
-            } else {
-                message.channel.send('**`' + queue.spliceSong(index) + '` has been removed from QUEUE!**');
+        case 1:
+            {
+                let index = args[0];
+                if (isNaN(index)) {
+                    if (index === 'last') {
+                        guild.boundTextChannel.send('**`' + queue.popLast() + '` has been removed from QUEUE!**');
+                    } else {
+                        guild.boundTextChannel.send('Invailid option! Action aborted.');
+                    }
+                } else {
+                    Number(index);
+                    if (index < 0 || index > guild.queue.length) {
+                        guild.boundTextChannel.send('Index out of range! Please choose a valid one, use `>queue` for checking.');
+                    } else if (index === 0) {
+                        skip_songs(message, args);
+                    } else {
+                        guild.boundTextChannel.send('**`' + guild.queue.spliceSong(index) + '` has been removed from QUEUE!**');
+                    }
+                }
+                break;
             }
-        }
-    } else {
-        if (isNaN(args[0]) || isNaN(args[1])) {
-            message.channel.send('Invailid option! Action aborted.');
-            return;
-        } else {
-            let pos = Number(args[0]);
-            let length = Number(args[1]);
-            if (pos < 1 || pos > queue.length() || length > (queue.length() - pos)) {
-                return message.channel.send('Index out of range! Please choose a valid one, use `>queue` for checking.');
+        case 2:
+            {
+                if (isNaN(args[0]) || isNaN(args[1])) {
+                    return guild.boundTextChannel.send('Invailid option! Action aborted.');
+                } else {
+                    let pos = Number(args[0]);
+                    let length = Number(args[1]);
+                    if (pos < 1 || pos > guild.queue.length || length > (guild.queue.length - pos)) {
+                        return guild.boundTextChannel.send('Index out of range! Please choose a valid one, use `>queue` for checking.');
+                    }
+                    guild.queue.spliceSongs(pos, length);
+                    guild.boundTextChannel.send('**Songs from number ' + pos + ' to ' + (pos + length - 1) + ' removed from QUEUE!**');
+                }
+                break;
             }
-            queue.spliceSongs(pos, length);
-            message.channel.send('**Songs from number ' + pos + ' to ' + (pos + length - 1) + ' removed from QUEUE!**');
-        }
     }
 }
-async function getNowPlayingData(currSong, message, bot) {
-    let t = Math.round(streamDispatcher.time / 1000);
+async function getNowPlayingData(message, bot) {
+    guild = streams.get(message.guild.id);
+    if (guild.queue.isEmpty()) {
+        return guild.boundTextChannel.send("Nothing is playing.");
+    }
+    let currSong = guild.queue.getAt(0);
+    let t = Math.round(guild.streamDispatcher.time / 1000);
     let np_box = "**`" + await time_converter(t) + "`𝗹" +
-        await create_progressbar(t, currSong._duration) + "𝗹`" +
-        await time_converter(currSong._duration) + "`**\n__`Channel`__: **`" + currSong._channel + "`**";
-    let embed = new discord.RichEmbed()
-        .setTitle(currSong._name)
-        .setAuthor('♫ Now Playing ♫', 'https://cdn.discordapp.com/attachments/413313406993694728/525196421553455114/Yui_Loading_5.gif')
+        await create_progressbar(t, currSong.duration) + "𝗹`" +
+        await time_converter(currSong.duration) + "`**\n__`Channel`__: **`" + currSong.channel + "`**";
+    const embed = new discord.RichEmbed()
+        .setTitle(currSong.title)
+        .setAuthor('♫ Now Playing ♫', bot.user.avatarURL)
         .setDescription(np_box)
         .setColor(colorCodeYui)
-        .setThumbnail(currSong._thumbUrl)
-        .setURL(currSong._vidUrl)
-        .setFooter('Requested by ' + currSong._requester)
-    message.channel.send({ embed });
+        .setThumbnail(currSong.thumbnailUrl)
+        .setURL(currSong.videoUrl)
+        .setFooter('Requested by ' + currSong.requester)
+    guild.boundTextChannel.send({ embed });
 }
 
-async function queue_length(queue) {
+function clearQueue(message) {
+    let guild = streams.get(message.guild.id);
+    if (!guild.queue.isEmpty()) {
+        guild.queue.clearQueue();
+        guild.boundTextChannel.send(":x: **Queue cleared!**");
+    } else {
+        guild.boundTextChannel.send("Queue is empty.");
+    }
+}
+
+function stopPlaying(message) {
+    guild = streams.get(message.guild.id)
+    guild.queue.deleteQueue();
+    resetStatus(guild.id);
+}
+
+/**
+ * 
+ * @param {musicQueue} queue
+ * @type {Promise<Number>}
+ */
+function queue_length(guild) {
     return new Promise((resolve) => {
         try {
-            return resolve(queue.totalDurLength());
+            return resolve(guild.queue.totalDurLength());
         } catch (error) {
             return resolve(0);
         }
@@ -601,13 +748,21 @@ function getID(str, callback) {
     }
 }
 
+function getPlaylistId(args, callback) {
+    if (!isYtlink(args)) {
+        throw new Error('Argument is not a youtube link.');
+    } else {
+        callback(getPlaylistID(args));
+    }
+}
+
 function isYtlink(str) {
     if (typeof str === 'string') {
         return (str.indexOf('youtube.com') >= 0) || (str.indexOf('youtu.be') >= 0);
     } else return false;
 }
 
-async function time_converter(num) {
+function time_converter(num) {
     return new Promise(resolve => {
         if (num == 0) {
             return resolve('LIVE');
@@ -634,19 +789,202 @@ function create_progressbar(num_progress, num_total) {
         return t.substr(0, index) + '⦿' + t.substr(index + 1);
     }
 }
+function youtubeTimeConverter(duration) {
+    return new Promise((resolve) => {
+        var a = duration.match(/\d+/g);
+        if (duration.indexOf('M') >= 0 && duration.indexOf('H') == -1 && duration.indexOf('S') == -1) {
+            a = [0, a[0], 0];
+        }
+        if (duration.indexOf('H') >= 0 && duration.indexOf('M') == -1) {
+            a = [a[0], 0, a[1]];
+        }
+        if (duration.indexOf('H') >= 0 && duration.indexOf('M') == -1 && duration.indexOf('S') == -1) {
+            a = [a[0], 0, 0];
+        }
+        duration = 0;
+        if (a.length == 3) {
+            duration = duration + parseInt(a[0]) * 3600;
+            duration = duration + parseInt(a[1]) * 60;
+            duration = duration + parseInt(a[2]);
+        }
+        if (a.length == 2) {
+            duration = duration + parseInt(a[0]) * 60;
+            duration = duration + parseInt(a[1]);
+        }
+        if (a.length == 1) {
+            duration = duration + parseInt(a[0]);
+        }
+        resolve(duration);
+    });
+}
+
 module.exports = {
     play: play,
     addNext: addNext,
-    search_list: search_list,
+    search_list: searchSong,
     autoPlay: autoPlay,
-    getChannelID_pl: getChannelID_pl,
     check_queue: check_queue,
     remove_songs: remove_songs,
     skip_songs: skip_songs,
-    shuffle_queue: shuffle_queue,
+    shuffleQ: shuffleQueue,
     resetStatus: resetStatus,
     nowPlaying: getNowPlayingData,
-    loopSetting: loopSetting,
+    loopSetting: loopSettings,
     pause: pauseStream,
     resume: resumeStream,
+    clearQueue: clearQueue,
+    stop: stopPlaying,
+    checkChannel: checkBoundChannel,
+    checkOnLeave: checkOnLeave,
+    resetChannelStat: resetChannelStat,
+    leaveVC: leaveVC,
+
 }
+
+// var isAutoPlaying = false;
+// var isLooping = false;
+// var isQueueLooping = false;
+// var isPlaying = false;
+// var streamDispatcher = undefined; //control current stream
+// var voiceConnection = undefined; //control current connection
+// var isPause = false;
+// var tmp_channelId = '';
+// var queue = new musicQueue;
+// var boundTextChannel;
+// var boundVoiceChannel;
+
+// async function ytdlGetInfoNext(id, requester) {
+//     return new Promise((resolve, reject) => {
+//         ytdl.getInfo(id, (err, info) => {
+//             if (err) {
+//                 reject(err);
+//             } else {
+//                 resolve(queue.addNext(new song(info.video_id, info.title, info.author.name,
+//                     info.length_seconds, requester, info.video_url, info.thumbnail_url)));
+//             }
+//         });
+//     });
+// }
+/*youtube request link: 
+https://www.googleapis.com/youtube/v3/videos?part=snippet%2C+contentDetails&id={ids...}&fields=items(contentDetails%2Fduration%2Cid%2Csnippet(channelId%2CchannelTitle%2Cthumbnails%2Fdefault%2Ctitle))&key={key}
+id = encodeURIComponent(id1,id2,...)
+part = encodeUriComponent(snippet, contentDetails)
+*/
+
+//https://stackoverflow.com/questions/22148885/converting-youtube-data-api-v3-video-duration-format-to-seconds-in-javascript-no
+// function queueSong(message, args) {
+//     var requester = message.member.displayName;
+//     //let guild = message.guild.id;
+//     let temp_status = '';
+//     getID(args, async function (id) {
+//         await getInfoIds(id, requester).then(async () => {
+//             getChannelID_pl(id);
+//             if (isPlaying === false) {
+//                 isPlaying = true;
+//                 playMusic(id, message);
+//                 temp_status = '♫ Now Playing ♫';
+//             } else {
+//                 temp_status = '♬ Added To QUEUE ♬';
+//             }
+//             var np_box = "*`Channel`*: **`" + queue.last._channel + "`**\n*`Duration`*: **`" + await time_converter(queue.last._duration) + "`**" +
+//                 ((queue.length === 1) ? "" : ("\n*`Position in queue`*: **`" + (queue.length - 1) + "`**"));
+//             var embed = new discord.RichEmbed()
+//                 .setTitle(queue.last.title)
+//                 .setAuthor(temp_status, message.author.avatarURL)
+//                 .setDescription(np_box)
+//                 .setColor(colorCodeYui)
+//                 .setThumbnail(queue.last.thumbnailUrl)
+//                 .setTimestamp()
+//                 .setURL(queue.last.videoUrl)
+//                 .setFooter('Requested by ' + requester)
+//             message.channel.send(embed);
+//         }, (error) => {
+//             console.log(error);
+//         });
+//     });
+// }
+/**
+ * function checkBoundChannel(message, join) {
+    if (message.member.voiceChannel) {
+        if (!boundVoiceChannel && join) {
+            //boundVoiceChannel = message.member.voiceChannel;
+            //boundTextChannel = message.channel;
+            let boundVC = message.member.voiceChannel;
+            let boundTC = message.channel;
+            message.channel.send("Bound to Text Channel: **`" + boundTextChannel.name + "`** and Voice Channel: **`" + boundVoiceChannel.name + "`**!");
+            boundVoiceChannel.join().then((connection) => {
+                //voiceConnection = connection;
+                pushStream(message.guild.id, boundVC, boundTC, connection);
+            });
+            return true;
+        } else {
+            if (message.channel === boundTextChannel && message.member.voiceChannel === boundVoiceChannel) {
+                return true;
+            } else {
+                if (boundVoiceChannel) {
+                    message.reply("I'm playing at **`" + boundTextChannel.name + "`** -- **`" + boundVoiceChannel.name + "`**");
+                } else {
+                    message.reply("I'm not in any voice channel.");
+                }
+                return false;
+            }
+        }
+    } else {
+        message.reply("*please join a __Voice Channel__!*");
+    }
+}
+ */
+// function getInfoIds(ids, requester) {
+//     return new Promise((resolve, reject) => {
+//         request('https://www.googleapis.com/youtube/v3/videos?part=' + encodeURIComponent('snippet, contentDetails') + '&id=' + encodeURIComponent(ids) + '&fields=items(contentDetails%2Fduration%2Cid%2Csnippet(channelId%2CchannelTitle%2Cthumbnails%2Fdefault%2Ctitle))&key=' + ytapikey,
+//             async function (err, res, body) {
+//                 if (err) reject(err);
+//                 var json = JSON.parse(body);
+//                 var promises = json.items.map((e) => {
+//                     pushToQueue(e, requester).catch(console.log);
+//                 });
+//                 Promise.all(promises).then(resolve).catch(console.error);
+//             });
+//     });
+// }
+// function playMusic(id, message) {
+//     let qual = (queue.getAt(0).duration === 'LIVE') ? '95' : 'highestaudio';
+//     stream = ytdl('https://www.youtube.com/watch?v=' + id, {
+//         audioonly: true,
+//         quality: qual
+//     });
+//     streamDispatcher = voiceConnection.playStream(stream, {
+//         volume: 0.75
+//     });
+//     let sent;
+//     streamDispatcher.on('start', () => {
+//         voiceConnection.player.streamingData.pausedTime = 0;
+//         if (!isLooping) {
+//             message.channel.send('**`Now Playing: 🎧 ' + queue.getAt(0).title + '!`**').then(msg => {
+//                 sent = msg;
+//             });
+//         }
+//     });
+//     streamDispatcher.on('end', () => {
+//         if (sent) {
+//             sent.delete(50);
+//         }
+//         var temp = queue.shiftSong();
+//         if (isLooping) {
+//             queue.unshiftSong(temp);
+//         } else if (isQueueLooping) {
+//             queue.addSong(temp);
+//         }
+//         if (queue.isEmpty()) {
+//             if (!isAutoPlaying) {
+//                 voiceConnection.setSpeaking(false);
+
+//                 resetStatus();
+//             } else {
+//                 autoPlaySong(tmp_channelId, message);
+//             }
+//         } else {
+//             playMusic(queue.getAt(0).id, message);
+//         }
+//     });
+// }

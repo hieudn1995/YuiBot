@@ -1,28 +1,37 @@
 const discord = require('discord.js');
 const bot = new discord.Client({
   disabledEvents: ['TYPING_START', 'MESSAGE_REACTION_ADD', 'RELATIONSHIP_ADD', 'RELATIONSHIP_REMOVE', 'MESSAGE_REACTION_REMOVE'],
-  disableEveryone: true
+  disableEveryone: true,
 });
-const musicQueue = require('./musicQueue.js');
+const fs = require('fs');
 const musicCommands = require('./musicCommands.js');
 const utilCommands = require('./Utilities.js');
-const prefix  = process.env.PREFIX;
-const bot_token = process.env.BOT_TOKEN;
-var queue = new musicQueue;
+// const ytapikey = process.env.YT_API_KEY;
+// const prefix  = process.env.PREFIX;
+// const OwnerID = process.env.OWNER_ID;
+// const bot_token = process.env.BOT_TOKEN;
+// const tenor_key = process.env.TENOR_KEY;
+// const anon_id = process.env.ANON_ID;
+var config = JSON.parse(fs.readFileSync('./config.json', 'utf-8'));
+const prefix = config.prefix;
+const bot_token = config.token;
 var leaveOnTimeOut = undefined;
-console.log('Launching Yui-chan...');
-bot.login(bot_token);
+console.log('Launching Yui-chan...')
 bot.on('ready', () => {
   console.log('Yui is online!');
+  //console.log();
   bot.user.setActivity('📻 Radio Happy', {
     url: 'https://twitch.tv/onlypolaris',
-    type: 'STREAMING'
+    type: 'STREAMING',
   });
 });
+
+bot.login(bot_token);
+
 bot.on('voiceStateUpdate', (oldMem, newMem) => {
-  switch (utilCommands.checkOnLeave(oldMem, newMem)) {
+  switch (musicCommands.checkOnLeave(oldMem, newMem)) {
     case 'clear': {
-        if (leaveOnTimeOut !== undefined) {
+        if (leaveOnTimeOut) {
           clearTimeout(leaveOnTimeOut);
           leaveOnTimeOut = undefined;
         }
@@ -33,141 +42,121 @@ bot.on('voiceStateUpdate', (oldMem, newMem) => {
       }
     case 'leave': {
         if (oldMem.voiceChannel.members.size === 1) {
-          leaveOnTimeOut = setTimeout(() => {            
-            queue.deleteQueue();
-            musicCommands.resetStatus();            
-            utilCommands.leaveVC(oldMem);
+          leaveOnTimeOut = setTimeout(() => {
+            musicCommands.leaveVC(oldMem);
           }, 30000);
         }
         break;
       }
   }
 });
-bot.on("message", async (message) => {
+bot.on("message", (message) => {
   if (!message.content.startsWith(prefix) || message.author.bot) return;
   var args = message.content.slice(prefix.length).trim().split(/ +/g);
   const command = args.shift().toLowerCase();
   switch (command) {
     case 'play': case 'p': {
-      if (utilCommands.checkChannel(message, true)) {
-        return musicCommands.play(message, queue, args);
+      if (musicCommands.checkChannel(message, true)) {
+        return musicCommands.play(bot, message, args);
       }
       break;
     }
-    case 'pnext': case 'pn': {
-      if (utilCommands.checkChannel(message, true)) {
-        return musicCommands.addNext(message, queue, args);
+    case 'pn': case 'pnext': {
+      if (musicCommands.checkChannel(message, true)) {
+        return musicCommands.addNext(bot, message, args);
       }
       break;
     }
     case 'skip' : case 'next': {
-      if (utilCommands.checkChannel(message, false)) {
-        if (queue.isEmpty()) {
-          return message.reply('Nothing is playing!');
-        } else {
-          return musicCommands.skip_songs(message, queue, args);
-        }
+      if (musicCommands.checkChannel(message, false)) {
+          return musicCommands.skip_songs(message, args);
       }
       break;
     }
     case 'join': case 'come': {
-      if (utilCommands.checkChannel(message, true)) {
+      if (musicCommands.checkChannel(message, true)) {
         return message.channel.send(" :loudspeaker: Kawaii **Yui-chan** is here~! xD");
       }
       break;
     }
     case 'leave' : case 'bye': {
-      if (utilCommands.checkChannel(message, false)) {
-        queue.deleteQueue();
-        musicCommands.resetStatus();        
-        utilCommands.resetStatus();
-        message.member.voiceChannel.leave();
+      if (musicCommands.checkChannel(message, false)) {
+        message.member.voiceChannel.leave(); 
+        musicCommands.resetStatus(message.guild.id);
+        musicCommands.resetChannelStat(message.guild.id)
         return message.channel.send("**_Bye bye~! Matta nee~!_**");
       }
       break;
     }
     case 'np' : case 'nowplaying': {
-      if (utilCommands.checkChannel(message, false)) {
-        if (queue.isEmpty()) {
-          return message.reply('Nothing is playing!');
-        } else {
-          return musicCommands.nowPlaying(queue.songs[0], message, bot);
-        }
+      if (musicCommands.checkChannel(message, false)) {
+          return musicCommands.nowPlaying(message, bot);
       }
       break;
     }
     case 'queue': case 'q': {
-      if (utilCommands.checkChannel(message, false)) {
-        if (queue.isEmpty()) {
-          return message.channel.send("There's nothing to play around here. How about adding something ?");
-        } else {
-          return musicCommands.check_queue(queue, message, args);
-        }
+      if (musicCommands.checkChannel(message, false)) {
+          return musicCommands.check_queue(message, args);
       }
       break;
     }
     case 'pause': {
-      if (utilCommands.checkChannel(message, false)) {
+      if (musicCommands.checkChannel(message, false)) {
         return musicCommands.pause(message);
       }
       break;
     }
     case 'resume': {
-      if (utilCommands.checkChannel(message, false)) {
+      if (musicCommands.checkChannel(message, false)) {
         return musicCommands.resume(message);
       }
       break;
     }
     case 'stop': {
-      if (utilCommands.checkChannel(message, false)) {
-        if(!queue.isEmpty()) {
-          queue.deleteQueue();
-          musicCommands.resetStatus();
+      if (musicCommands.checkChannel(message, false)) {
+          musicCommands.stop(message);
           return message.channel.send('**Stopped!**');
-        }
-        else { return message.channel.send("I'm not playing anything."); }
       }
       break;
     }
     case 'loop': {
-      if (utilCommands.checkChannel(message, false)) {
+      if (musicCommands.checkChannel(message, false)) {
         return musicCommands.loopSetting(message, args);
       }
       break;
     }
     case 'shuffle': {
-        if (utilCommands.checkChannel(message, false)) {
-          musicCommands.shuffle_queue(queue);
-          return message.channel.send(':twisted_rightwards_arrows: **`QUEUE shuffled!`**');
-        }
+      if (musicCommands.checkChannel(message, false)) {
+        musicCommands.shuffleQ(message);
+      }
       break;
     }
     case 'remove': {
-      if (utilCommands.checkChannel(message, false)) {
-        return musicCommands.remove_songs(message, queue, args);
+      if (musicCommands.checkChannel(message, false)) {
+        return musicCommands.remove_songs(message, args);
       }
       break;
     }
-    case 'clear': {
-       if (utilCommands.checkChannel(message, false)) {
-         queue.clearQueue();
-         return message.channel.send(":x: **Queue cleared!**");
-       }
+    case 'clear': {      
+      if (musicCommands.checkChannel(message, false)) {
+        return musicCommands.clearQueue(message);
+      }      
       break;
     }
     case 'search': {
-      if (utilCommands.checkChannel(message, true)) {
+      if (musicCommands.checkChannel(message, true)) {
         var query = args.join(" ");
-        return musicCommands.search_list(query, queue, message);
+        return musicCommands.search_list(bot, query, message);
       }
       break;
     }
-     case 'autoplay': case 'ap': {
-      if (utilCommands.checkChannel(message, true)) {
-        musicCommands.autoPlay(queue, message);
+    case 'autoplay': case 'ap': {
+      if (musicCommands.checkChannel(message, true)) {
+        musicCommands.autoPlay(message, bot);
       }
       break;
     }
+    //end of music command batch
     case 'ping': {
       return utilCommands.getPing(message, bot);
     }
@@ -184,13 +173,17 @@ bot.on("message", async (message) => {
       message.delete().then(sent => {  
         utilCommands.adminCommands(sent, args);
       }).catch(err => {
-        message.author.send("Unable to delete the message due to permissions missing.");
+        message.author.send("Something went wrong.");
         console.log(err);
       });
       break;
     }
     case 'help': {
       return utilCommands.help(message, bot);
+    }
+    default : {
+      message.channel.send("What do you mean by `>" + command + "`? How about taking a look at `>help`?.");
+      break;
     }
   }
 });

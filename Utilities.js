@@ -1,70 +1,17 @@
 const request = require('request');
 const discord = require('discord.js');
-//const ggtrans = require('google-translate-api');
+const fs = require('fs');
 
-const tenor_key = process.env.TENOR_KEY;
-const anon_id = process.env.ANON_ID;
-const OwnerID = process.env.OWNER_ID;
+var config = JSON.parse(fs.readFileSync('./config.json', 'utf-8'));
+const tenor_key = config.tenor_key;
+const anon_id = config.anon_id;
+// const tenor_key = process.env.TENOR_KEY;
+// const anon_id = process.env.ANON_ID;
+// const OwnerID = process.env.OWNER_ID;
+const OwnerID = '390348450690236416';
 
-var boundTextChannel = undefined;
-var boundVoiceChannel = undefined;
 const colorCodeYui = 'FFA000';
 
-function resetStatus() {
-    boundTextChannel = undefined;
-    boundVoiceChannel = undefined;
-}
-
-function isBound() {
-    return (boundVoiceChannel !== undefined);
-}
-
-function leaveVC(member) {
-    boundTextChannel.send("*There's no one around so I'll leave too. Bye~!*");
-    resetStatus();
-    return member.voiceChannel.leave();
-}
-
-function checkOnLeave(oldMem, newMem) {
-    if (isBound()) {
-        let oldStat = oldMem.voiceChannel;
-        let newStat = newMem.voiceChannel;
-        if (newStat === boundVoiceChannel) {
-            return 'clear';
-        } else
-        if (!oldStat || oldStat !== boundVoiceChannel) {
-            return 'ignore';
-        } else
-        if (!newStat || newStat !== boundVoiceChannel) {
-            return 'leave'
-        }
-    }
-}
-
-function checkBoundChannel(message, join) {
-    if (message.member.voiceChannel) {
-        if (!boundVoiceChannel && join) {
-            boundVoiceChannel = message.member.voiceChannel;
-            boundTextChannel = message.channel;
-            message.channel.send("Bound to Text Channel: **`" + boundTextChannel.name + "`** and Voice Channel: **`" + boundVoiceChannel.name + "`**!");
-            boundVoiceChannel.join();
-            return true;
-        } else {
-            if (message.channel === boundTextChannel && message.member.voiceChannel === boundVoiceChannel) {
-                return true;
-            } else {
-                if (boundVoiceChannel) {
-                    message.reply("I'm playing at **`" + boundTextChannel.name + "`** -- **`" + boundVoiceChannel.name + "`**");
-                } else {
-                    message.reply("I'm not in any voice channel.");
-                }
-                return false;
-            }
-        }
-    } else {
-        message.reply("*please join a __Voice Channel__!*");
-    }
-}
 async function tenor_gif(query, message) {
     message.delete().then(async message => {
         let num = await RNG(5);
@@ -99,24 +46,24 @@ function RNG(range) {
 }
 
 function translate(args, message, bot) {
-    return message.channel.send("Currently unavailable. Gomennasai desu :(. Polaris is working  on it.");
-//     if (args[0] === 'code') {
-//         message.author.send("Here're the language codes required for translation", {
-//             embed: new discord.RichEmbed()
-//                 .setAuthor('Language codes request', bot.user.avatarURL)
-//                 .setColor(colorCodeYui)
-//                 .setURL('https://cdn.discordapp.com/attachments/413313406993694728/456677126821773319/langcode.txt')
-//                 .setTitle('Language Codes (.txt file)')
-//                 .setDescription('To translate: type >translate <source language> <destination language> <your words(limit: 1000 words)>')
-//         });
-//     } else if (args.length < 3) {
-//         return message.channel.send("Wrong format, use `>translate auto <destination language> <words>` or type `>translate code` for more information.");
-//     } else {
-//         let scr = args.shift();
-//         let des = args.shift();
-//         let query = args.join(" ");
-//         googleTranslate(query, scr, des, message);
-//     }
+    args = args.trim().split(/ +/g);
+    if (args[0] === 'code') {
+        message.author.send("Here're the language codes required for translation", {
+            embed: new discord.RichEmbed()
+                .setAuthor('Language codes request', bot.user.avatarURL)
+                .setColor(colorCodeYui)
+                .setURL('https://cdn.discordapp.com/attachments/413313406993694728/456677126821773319/langcode.txt')
+                .setTitle('Language Codes (.txt file)')
+                .setDescription('To translate: type >translate <source language> <destination language> <your words(limit: 1000 words)>')
+        });
+    } else if (args.length < 3) {
+        return message.channel.send("Wrong format, use `>translate auto <destination language> <words>` or type `>translate code` for more information.");
+    } else {
+        let scr = args.shift();
+        let des = args.shift();
+        let query = args.join(" ");
+        googleTranslate(query, scr, des, message);
+    }
 }
 
 function googleTranslate(query, src_lang, des_lang, message) {
@@ -139,11 +86,13 @@ function adminCommands(message, args) {
     if (isMyOwner(message.author.id) || message.member.hasPermission(['BAN_MEMBERS', 'KICK_MEMBERS'], false, true, true)) {
         let action = args.shift().toLowerCase();
         let mem = message.mentions.members.first();
-        let testFormat = args.shift();     
+        let testFormat = args.shift();
         if (mem && mem == testFormat) {
+            //let mem = message.guild.member(user);            
             let reason = args.join(" ");
             switch (action) {
-                case 'kick': {
+                case 'kick':
+                    {
                         mem.kick(reason).then((mem) => {
                             message.channel.send('`' + mem.user.username + '` has been kicked by `' + message.member.displayName + '` for reason: ' + reason);
                         }).catch(err => {
@@ -152,7 +101,8 @@ function adminCommands(message, args) {
                         });
                         break;
                     }
-                case 'ban': {
+                case 'ban':
+                    {
                         mem.ban(reason).then((mem) => {
                             message.channel.send('`' + mem.user.username + '` has been banned by `' + message.member.displayName + '` for reason: ' + reason);
                         }).catch(err => {
@@ -161,7 +111,8 @@ function adminCommands(message, args) {
                         });
                         break;
                     }
-                case 'mute': {
+                case 'mute':
+                    {
                         mem.setMute(true, reason).then(() => {
                             message.channel.send('`' + mem.displayName + '` has been muted by `' + message.member.displayName + '` for reason: ' + reason);
                         }).catch(err => {
@@ -170,7 +121,8 @@ function adminCommands(message, args) {
                         });
                         break;
                     }
-                case 'unmute': {
+                case 'unmute':
+                    {
                         mem.setMute(false, reason).then(() => {
                             message.channel.send('`' + mem.displayName.toString() + '` has been unmuted by `' + message.member.displayName + '`');
                         }).catch(err => {
@@ -179,48 +131,48 @@ function adminCommands(message, args) {
                         });
                         break;
                     }
-                case 'setnickname': {                
-                    let oldname  = mem.displayName;
-                    mem.setNickname(reason).then(() => {
-                        message.channel.send("`" + oldname + "'s` nickname is set to `" + reason + "` by `" + message.member.displayName + "`");
-                    }).catch(err => {
-                        message.author.send("Unable to set nickname. I don't have enough permissions.");
-                        console.log(err);
-                    });
-                    break;
-                }
-                case 'addrole': {
+                case 'setnickname':
+                    {
+                        let oldname = mem.displayName;
+                        mem.setNickname(reason).then(() => {
+                            message.channel.send("`" + oldname + "'s` nickname is set to `" + reason + "` by `" + message.member.displayName + "`");
+                        }).catch(err => {
+                            message.author.send("Unable to set nickname. I don't have enough permissions.");
+                            console.log(err);
+                        });
+                        break;
+                    }
+                case 'addrole':
+                    {
                         let role = getRoleId(message.guild.roles, reason);
                         if (role[0]) {
                             if (!mem.roles.has(role[0])) {
                                 mem.addRole(role[0]).then(() => {
                                     message.channel.send("Added role `" + role[1] + "` to `" + mem.displayName + "` by `" + message.member.displayName + "`");
-                                }).catch(err => { 
+                                }).catch(() => { 
                                     message.author.send("Something went wrong. Maybe i don't have enough permission to do this. ");
-                                    console.error(err);
                                 });
-
                             } else {
-                                message.author.send("the member has already had the role `" + role[1] + "`");
+                                message.author.send("The member has already had the role `" + role[1] + "`");
                             }
                         } else {
                             message.author.send("Invalid role. Please try gain.")
                         }
                         break;
                     }
-                case 'removerole': {
+                case 'removerole':
+                    {
                         let role = getRoleId(message.guild.roles, reason);
                         if (role[0]) {
                             if (mem.roles.has(role[0])) {
                                 mem.removeRole(role[0]).then(() => {
                                     message.channel.send("Removed role `" + role[1] + "` from `" + mem.displayName + "` by `" + message.member.displayName + "`");
-                                }).catch((err) => { 
+                                }).catch(() => { 
                                     message.author.send("Something went wrong. Maybe i don't have enough permission to do this. ");
-                                    console.log(err);
                                 });
 
                             } else {
-                                message.author.send("the member doesn't have the role `" + role[1] + "`");
+                                message.author.send("The member doesn't have role `" + role[1] + "`");
                             }
                         } else {
                             message.author.send("Invalid role. Please try gain.")
@@ -236,19 +188,8 @@ function adminCommands(message, args) {
     }
 }
 
-function getRoleId(data, search_val) {
-    let id, name;
-    data.map((val, key) => {
-        if (val.name.toLowerCase() === search_val.toLowerCase()) {
-            id = key;
-            name = val.name;
-        }
-    });
-    return [id, name];
-}
-
 function getPing(message, bot) {
-    message.channel.send('Pinging...').then((sent) => {
+    message.channel.send('Pinging...').then(sent => {
         let diff = (sent.createdTimestamp - message.createdTimestamp);
         sent.edit({
             embed: new discord.RichEmbed()
@@ -260,7 +201,7 @@ function getPing(message, bot) {
 }
 
 function say(args, message) {
-    if (isMyOwner(message.author.id) || message.member.hasPermission("BAN_MEMBERS", false, true, true)) {
+    if (isMyOwner(message.author.id) || message.member.hasPermission('BAN_MEMBERS', false, true, true)) {
         args = args.join(" ");
         message.delete().then(message => {
             message.channel.send({
@@ -274,10 +215,21 @@ function say(args, message) {
             message.author.send('sorry but i will only speak for my Master.');
         });
     }
+
 }
 
-function isMyOwner(UserID)
-{
+function getRoleId(data, search_val) {
+    let id, name;
+    data.map((val, key) => {
+        if (val.name.toLowerCase() === search_val.toLowerCase()) {
+            id = key;
+            name = val.name;
+        }
+    });
+    return [id, name];
+}
+
+function isMyOwner(UserID) {
     return (UserID === OwnerID);
 }
 
@@ -289,7 +241,7 @@ function help(message, bot) {
         "`join | come`: join the bot\n" +
         "`queue <?number>`: list out the queue at tab number (default 0)\n" +
         "`np | nowplaying`: currently playing song's info\n" +
-        "`loop <?queue>`: loop the song/queue\n" +
+        "`loop <?queue>`: loop the song/the queue\n" +
         "`pause`: pause the song\n" +
         "`resume`: resume pause\n" +
         "`shuffle`: shuffle the queue\n" +
@@ -315,12 +267,68 @@ function help(message, bot) {
 module.exports = {
     tenorGIF: tenor_gif,
     adminCommands: adminCommands,
-    checkChannel: checkBoundChannel,
-    resetStatus: resetStatus,
-    checkOnLeave: checkOnLeave,
-    leaveVC: leaveVC,
+    
     getPing: getPing,
     translate: translate,
     say: say,
     help: help,
 }
+// checkChannel: checkBoundChannel,
+//     resetStatus: resetChStat,
+//     checkOnLeave: checkOnLeave,
+//     leaveVC: leaveVC,
+/*
+var boundTextChannel = undefined;
+var boundVoiceChannel = undefined;
+function checkBoundChannel(message, join) {
+    if (message.member.voiceChannel) {
+        if (!boundVoiceChannel && join) {
+            boundVoiceChannel = message.member.voiceChannel;
+            boundTextChannel = message.channel;
+            message.channel.send("Bound to Text Channel: **`" + boundTextChannel.name + "`** and Voice Channel: **`" + boundVoiceChannel.name + "`**!");
+            boundVoiceChannel.join();
+            return true;
+        } else {
+            if (message.channel === boundTextChannel && message.member.voiceChannel === boundVoiceChannel) {
+                return true;
+            } else {
+                if (boundVoiceChannel) {
+                    message.reply("I'm playing at **`" + boundTextChannel.name + "`** -- **`" + boundVoiceChannel.name + "`**");
+                } else {
+                    message.reply("I'm not in any voice channel.");
+                }
+                return false;
+            }
+        }
+    } else {
+        message.reply("*please join a __Voice Channel__!*");
+    }
+}
+
+function resetChStat() {
+    boundTextChannel = undefined;
+    boundVoiceChannel = undefined;
+}
+
+function leaveVC(member) {
+    boundTextChannel.send("*There's no one around so I'll leave too. Bye~!*");
+    resetChStat();
+    return member.voiceChannel.leave();
+}
+
+function checkOnLeave(oldMem, newMem) {
+    if (boundVoiceChannel) {
+        let oldStat = oldMem.voiceChannel;
+        let newStat = newMem.voiceChannel;
+        if (newStat === boundVoiceChannel) {
+            return 'clear';
+        } else
+        if (!oldStat || oldStat !== boundVoiceChannel) {
+            return 'ignore';
+        } else
+        if (!newStat || newStat !== boundVoiceChannel) {
+            return 'leave'
+        }
+    }
+}
+*/

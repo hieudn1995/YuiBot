@@ -1,7 +1,7 @@
 {
   "name": "yui_chan",
   "version": "2.0.0",
-  "description": "A simple Nodejs Discord music bot",
+  "description": "",
   "main": "yui.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -15,7 +15,10 @@
     "fs": "0.0.1-security",
     "get-youtube-id": "^1.0.0",
     "get-youtube-playlist-id": "0.0.1",
+    "google-translate-api": "^2.3.0",
     "opusscript": "0.0.6",
+    "pixiv-app-api": "^0.11.1",
+    "pixiv-img": "^0.3.1",
     "request": "^2.87.0",
     "ytdl-core": "^0.20.4"
   }
