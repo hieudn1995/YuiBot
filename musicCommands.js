@@ -72,7 +72,6 @@ function leaveVC(member) {
     guild.boundTextChannel.send("*There's no one around so I'll leave too. Bye~!*");
     resetStatus(guild.id);
     resetChannelStat(guild.id);
-    streams.delete(guild.id);
 }
 function checkOnLeave(oldMem, newMem) {
     let boundVC = (streams.has(oldMem.guild.id)) ? streams.get(oldMem.guild.id).boundVoiceChannel : undefined;
