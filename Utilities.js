@@ -1,15 +1,9 @@
 const request = require('request');
 const discord = require('discord.js');
-const fs = require('fs');
 
-var config = JSON.parse(fs.readFileSync('./config.json', 'utf-8'));
-const tenor_key = config.tenor_key;
-const anon_id = config.anon_id;
-// const tenor_key = process.env.TENOR_KEY;
-// const anon_id = process.env.ANON_ID;
-// const OwnerID = process.env.OWNER_ID;
-const OwnerID = '390348450690236416';
-
+const tenor_key = process.env.TENOR_KEY;
+const anon_id = process.env.ANON_ID;
+const OwnerID = process.env.OWNER_ID;
 const colorCodeYui = 'FFA000';
 
 async function tenor_gif(query, message) {
@@ -45,50 +39,48 @@ function RNG(range) {
     });
 }
 
-function translate(args, message, bot) {
-    args = args.trim().split(/ +/g);
-    if (args[0] === 'code') {
-        message.author.send("Here're the language codes required for translation", {
-            embed: new discord.RichEmbed()
-                .setAuthor('Language codes request', bot.user.avatarURL)
-                .setColor(colorCodeYui)
-                .setURL('https://cdn.discordapp.com/attachments/413313406993694728/456677126821773319/langcode.txt')
-                .setTitle('Language Codes (.txt file)')
-                .setDescription('To translate: type >translate <source language> <destination language> <your words(limit: 1000 words)>')
-        });
-    } else if (args.length < 3) {
-        return message.channel.send("Wrong format, use `>translate auto <destination language> <words>` or type `>translate code` for more information.");
-    } else {
-        let scr = args.shift();
-        let des = args.shift();
-        let query = args.join(" ");
-        googleTranslate(query, scr, des, message);
-    }
-}
-
-function googleTranslate(query, src_lang, des_lang, message) {
-    ggtrans(query, {
-        from: src_lang,
-        to: des_lang
-    }).then(res => {
-        message.channel.send({
-            embed: new discord.RichEmbed()
-                .setColor(colorCodeYui)
-                .setDescription(res.text)
-        });
-    }).catch(err => {
-        message.channel.send('Error. Translation failed!');
-        return console.error(err);
-    });
-}
+// function translate(args, message, bot) {
+//     args = args.trim().split(/ +/g);
+//     if (args[0] === 'code') {
+//         message.author.send("Here're the language codes required for translation", {
+//             embed: new discord.RichEmbed()
+//                 .setAuthor('Language codes request', bot.user.avatarURL)
+//                 .setColor(colorCodeYui)
+//                 .setURL('https://cdn.discordapp.com/attachments/413313406993694728/456677126821773319/langcode.txt')
+//                 .setTitle('Language Codes (.txt file)')
+//                 .setDescription('To translate: type >translate <source language> <destination language> <your words(limit: 1000 words)>')
+//         });
+//     } else if (args.length < 3) {
+//         return message.channel.send("Wrong format, use `>translate auto <destination language> <words>` or type `>translate code` for more information.");
+//     } else {
+//         let scr = args.shift();
+//         let des = args.shift();
+//         let query = args.join(" ");
+//         googleTranslate(query, scr, des, message);
+//     }
+// }
+// function googleTranslate(query, src_lang, des_lang, message) {
+//     ggtrans(query, {
+//         from: src_lang,
+//         to: des_lang
+//     }).then(res => {
+//         message.channel.send({
+//             embed: new discord.RichEmbed()
+//                 .setColor(colorCodeYui)
+//                 .setDescription(res.text)
+//         });
+//     }).catch(err => {
+//         message.channel.send('Error. Translation failed!');
+//         return console.error(err);
+//     });
+// }
 
 function adminCommands(message, args) {
     if (isMyOwner(message.author.id) || message.member.hasPermission(['BAN_MEMBERS', 'KICK_MEMBERS'], false, true, true)) {
         let action = args.shift().toLowerCase();
         let mem = message.mentions.members.first();
         let testFormat = args.shift();
-        if (mem && mem == testFormat) {
-            //let mem = message.guild.member(user);            
+        if (mem && mem == testFormat) {          
             let reason = args.join(" ");
             switch (action) {
                 case 'kick':
@@ -263,13 +255,10 @@ function help(message, bot) {
             .setFooter("Note: <>: obligatory param | <?> optional param | Permission: `BAN_MEMBERS` or above")
     });
 }
-
 module.exports = {
     tenorGIF: tenor_gif,
     adminCommands: adminCommands,
-    
     getPing: getPing,
-    translate: translate,
     say: say,
     help: help,
 }
