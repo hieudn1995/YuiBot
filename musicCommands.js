@@ -411,7 +411,7 @@ function getChannelID_pl(guild) {
         });
 }
 async function autoPlaySong(guild , requester) {
-    request('https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=' + channelId_related +
+    request('https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=' + guild.tmp_channelId +
         '&maxResults=50&type=video&fields=items(id%2Ckind%2Csnippet(channelId%2CchannelTitle%2Ctitle))&key=' + ytapikey,
         async (err, respond, body) => {
             if (err) return console.error(err);
