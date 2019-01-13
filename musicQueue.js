@@ -1,5 +1,4 @@
 
-const SongMetaData = require('./songMetaData')
 class musicQueue {
   constructor() {
     /**
