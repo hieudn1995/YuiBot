@@ -108,8 +108,7 @@ bot.on("message", (message) => {
     }
     case 'stop': {
       if (musicCommands.checkChannel(message, false)) {
-          musicCommands.stop(message);
-          return message.channel.send('**Stopped!**');
+          return musicCommands.stop(message);
       }
       break;
     }
