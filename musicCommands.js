@@ -30,8 +30,67 @@ function pushStream(guild, boundVoiceChannel, boundTextChannel) {
         tmp_channelId: '',
         queue: new musicQueue,
         boundVoiceChannel: boundVoiceChannel,
-        boundTextChannel: boundTextChannel
+        boundTextChannel: boundTextChannel,
+        leaveOnTimeout: undefined,
     });
+}
+function guildVoiceStateUpdate(oldMem, newMem) {
+    let guildCheck = checkOnLeave(oldMem, newMem);
+    switch (guildCheck.case) {
+        case 'clear':
+            {
+                if (guildCheck.guild && guildCheck.guild.leaveOnTimeout) {
+                    clearTimeout(guildCheck.guild.leaveOnTimeout);
+                    guildCheck.guild.leaveOnTimeout = undefined;
+                }
+                break;
+            }
+        case 'ignore':
+            {
+                break;
+            }
+        case 'leave':
+            {
+                if (oldMem.voiceChannel.members.size === 1) {
+                    guildCheck.guild.leaveOnTimeout = setTimeout(() => {
+                        leaveVC(guildCheck.guild);
+                    }, 30000);
+                }
+                break;
+            }
+    }
+
+}
+function checkOnLeave(oldMem, newMem) {
+    guild = streams.get(oldMem.guild.id);
+    let boundVC = guild ? guild.boundVoiceChannel : undefined;
+    if (boundVC) {
+        let oldStat = oldMem.voiceChannel;
+        let newStat = newMem.voiceChannel;
+        if (newStat === boundVC) {
+            return {
+                guild: guild,
+                case: 'clear',
+            };
+        } else
+        if (!oldStat || oldStat !== boundVC) {
+            return {
+                guild: guild,
+                case: 'ignore',
+            };
+        } else
+        if (!newStat || newStat !== boundVC) {
+            return {
+                guild: guild,
+                case: 'leave',
+            };
+        }
+    } else {
+        return {
+            guild: guild,
+            case: 'ignore',
+        };
+    }
 }
 function checkBoundChannel(message, join) {
     let boundVC = streams.has(message.guild.id) ? streams.get(message.guild.id).boundVoiceChannel : undefined;
@@ -64,32 +123,12 @@ function resetChannelStat(guildId) {
     guild = streams.get(guildId);
     guild.boundTextChannel = undefined;
     guild.boundVoiceChannel = undefined;
-    streams.delete(guildId);
 }
-function leaveVC(member) {
-    guild = streams.get(member.guild.id);
+function leaveVC(guild) {
     guild.boundVoiceChannel.leave();
     guild.boundTextChannel.send("*There's no one around so I'll leave too. Bye~!*");
     resetStatus(guild.id);
     resetChannelStat(guild.id);
-}
-function checkOnLeave(oldMem, newMem) {
-    let boundVC = (streams.has(oldMem.guild.id)) ? streams.get(oldMem.guild.id).boundVoiceChannel : undefined;
-    if (boundVC) {
-        let oldStat = oldMem.voiceChannel;
-        let newStat = newMem.voiceChannel;
-        if (newStat === boundVC) {
-            return 'clear';
-        } else
-        if (!oldStat || oldStat !== boundVC) {
-            return 'ignore';
-        } else
-        if (!newStat || newStat !== boundVC) {
-            return 'leave';
-        }
-    } else {
-        return 'ignore';
-    }
 }
 function createVoiceConnection(guild, bot) {
     if (guild.voiceConnection) {
@@ -254,7 +293,7 @@ function addNext(bot, message, args) {
                     "\n*`Duration`*: **`" + await time_converter(queue.getAt(1).duration) + "`**" +
                     "\n*`Position in queue`*: **`1`**";
                 var embed = new discord.RichEmbed()
-                    .setTitle(queue.getAt(1).titile)
+                    .setTitle(queue.getAt(1).title)
                     .setAuthor("♬ Added Next ♬", message.author.avatarURL)
                     .setDescription(np_box)
                     .setColor(colorCodeYui)
