@@ -23,27 +23,9 @@ bot.on('ready', () => {
 bot.login(bot_token);
 
 bot.on('voiceStateUpdate', (oldMem, newMem) => {
-  switch (musicCommands.checkOnLeave(oldMem, newMem)) {
-    case 'clear': {
-        if (leaveOnTimeOut) {
-          clearTimeout(leaveOnTimeOut);
-          leaveOnTimeOut = undefined;
-        }
-        break;
-      }
-    case 'ignore': {
-        break;
-      }
-    case 'leave': {
-        if (oldMem.voiceChannel.members.size === 1) {
-          leaveOnTimeOut = setTimeout(() => {
-            musicCommands.leaveVC(oldMem);
-          }, 30000);
-        }
-        break;
-      }
-  }
+  musicCommands.guildVoiceStateUpdate(oldMem, newMem);
 });
+
 bot.on("message", (message) => {
   if (!message.content.startsWith(prefix) || message.author.bot) return;
   var args = message.content.slice(prefix.length).trim().split(/ +/g);
