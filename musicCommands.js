@@ -123,6 +123,7 @@ function resetChannelStat(guildId) {
     guild = streams.get(guildId);
     guild.boundTextChannel = undefined;
     guild.boundVoiceChannel = undefined;
+    streams.delete(guildId);
 }
 function leaveVC(guild) {
     guild.boundVoiceChannel.leave();
