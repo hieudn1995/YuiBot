@@ -840,7 +840,6 @@ module.exports = {
     clearQueue: clearQueue,
     stop: stopPlaying,
     checkChannel: checkBoundChannel,
-    checkOnLeave: checkOnLeave,
     resetChannelStat: resetChannelStat,
-    leaveVC: leaveVC,
+    guildVoiceStateUpdate: guildVoiceStateUpdate,
 }
