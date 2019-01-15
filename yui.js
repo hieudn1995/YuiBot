@@ -8,7 +8,6 @@ const utilCommands = require('./Utilities.js');
 
 const prefix  = process.env.PREFIX;
 const bot_token = process.env.BOT_TOKEN;
-var leaveOnTimeOut = undefined;
 
 console.log('Launching Yui-chan...');
 
