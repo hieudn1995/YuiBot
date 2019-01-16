@@ -345,6 +345,7 @@ function playMusic(guild) {
             guild.queue.addSong(temp);
         }
         if (guild.queue.isEmpty()) {
+            delete stream;
             if (!guild.isAutoPlaying) {
                 delete temp; delete currSong; delete qual;
                 guild.voiceConnection.setSpeaking(false);
@@ -353,7 +354,7 @@ function playMusic(guild) {
                 return autoPlaySong(guild, temp.requester);
             }
         } else {
-            delete temp; delete currSong; delete qual;
+            delete stream; delete temp; delete currSong; delete qual;
             playMusic(guild);
         }
     });
