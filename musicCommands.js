@@ -28,6 +28,7 @@ function pushStream(guild, boundVoiceChannel, boundTextChannel) {
         streamDispatcher: undefined,
         voiceConnection: undefined,
         tmp_channelId: '',
+        tmp_nextPage: '',
         queue: new musicQueue,
         boundVoiceChannel: boundVoiceChannel,
         boundTextChannel: boundTextChannel,
@@ -223,7 +224,7 @@ function getInfoIds(queue, ids, requester, atEnd) {
                 if (err) reject(err);
                 var json = JSON.parse(body);
                 var promises = json.items.map((e) => {
-                    pushToQueue(queue, e, requester, atEnd).catch(console.error);
+                    pushToQueue(queue, e, requester, atEnd).catch(err => console.error(err));
                 });
                 Promise.all(promises).then(resolve).catch(console.error);
             });
@@ -312,8 +313,8 @@ function addNext(bot, message, args) {
 }
 
 function playMusic(guild) {
-    let currSong = guild.queue.getAt(0);
-    let qual = (currSong.duration === 'LIVE') ? '95' : 'highestaudio';
+    currSong = guild.queue.getAt(0);
+    qual = (currSong.duration === 'LIVE') ? '95' : 'highestaudio';
     stream = ytdl('https://www.youtube.com/watch?v=' + currSong.id, {
         audioonly: true,
         quality: qual
@@ -321,18 +322,23 @@ function playMusic(guild) {
     guild.streamDispatcher = guild.voiceConnection.playStream(stream, {
         volume: 0.75
     });
-    let sent;
+    sent = undefined;
     guild.streamDispatcher.on('start', () => {
         guild.voiceConnection.player.streamingData.pausedTime = 0;
         if (!guild.isLooping) {
-            guild.boundTextChannel.send('**`Now Playing: 🎧 ' + guild.queue.getAt(0).title + '!`**').then(msg => {
+            guild.boundTextChannel.send('**`🎧 Now Playing: ' + guild.queue.getAt(0).title + '`**').then(msg => {
                 sent = msg;
             });
         }
     });
-    guild.streamDispatcher.on('end', () => {
-        if (sent) { sent.delete(50); }
-        let temp = guild.queue.shiftSong();
+    guild.streamDispatcher.on('end', (reason) => {
+        if (sent) { sent.delete(50); delete sent; }
+        temp = guild.queue.shiftSong();
+        if(reason === 'Stream is not generating quickly enough.') { 
+            guild.boundTextChannel.send("Stream not stable! I'm skipping " + temp.title).then(mes => {
+                mes.delete(10000);
+            });
+        }
         if (guild.isLooping) {
             guild.queue.unshiftSong(temp);
         } else if (guild.isQueueLooping) {
@@ -340,12 +346,14 @@ function playMusic(guild) {
         }
         if (guild.queue.isEmpty()) {
             if (!guild.isAutoPlaying) {
+                delete temp; delete currSong; delete qual;
                 guild.voiceConnection.setSpeaking(false);
                 resetStatus(guild.id);
             } else {
-                autoPlaySong(guild, temp.requester);
+                return autoPlaySong(guild, temp.requester);
             }
         } else {
+            delete temp; delete currSong; delete qual;
             playMusic(guild);
         }
     });
@@ -450,20 +458,32 @@ function getChannelID_pl(guild) {
             guild.tmp_channelId = json.items[0].snippet.channelId;
         });
 }
-async function autoPlaySong(guild , requester) {
-    request('https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=' + guild.tmp_channelId +
-        '&maxResults=50&type=video&fields=items(id%2Ckind%2Csnippet(channelId%2CchannelTitle%2Ctitle))&key=' + ytapikey,
-        async (err, respond, body) => {
-            if (err) return console.error(err);
+async function autoPlaySong(guild, requester) {
+    nextPage = (guild.tmp_nextPage !== "") ? ("&pageToken=" + guild.tmp_nextPage) : "";
+    url = 'https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=' + guild.tmp_channelId + nextPage +
+    '&type=video&fields=items(id%2FvideoId%2Csnippet(channelId%2CchannelTitle%2Cthumbnails%2Fdefault%2Ctitle))%2CnextPageToken&key=' + ytapikey;
+    request(url, async (err, respond, body) => {
+            if (err) {
+                delete nextPage; delete url;
+                autoPlaySong(guild, requester);
+                return console.error('request-err:' + err); 
+            }
             var json = JSON.parse(body);
-            if (json.error) return console.error(json.error);
+            if (json.error) {
+                delete nextPage; delete url;
+                autoPlaySong(guild, requester);
+                return console.error("json-err:" + json.error); 
+            }
             await RNG(json.items.length).then(async (rnd) => {
                 if (json.items[rnd]) {
+                    guild.tmp_nextPage = json.nextPageToken ? json.nextPageToken : "";
                     await getInfoIds(guild.queue, json.items[rnd].id.videoId, requester, true).then(() => {
+                        delete nextPage; delete url;
                         playMusic(guild);
                     }, (error) => {
+                        delete nextPage; delete url;
                         autoPlaySong(guild, requester);
-                        return console.error(error);
+                        return console.error('local-getInfoIds-err:' + error);
                     });
                 }
             });
@@ -513,7 +533,7 @@ function resetStatus(guildId) {
             guild.isPlaying = false;
         }
     } else { 
-        return console.log("Something went wrong."); 
+        return console.log("Guild not found!"); 
     }
 }
 function loopSettings(message, args) {
@@ -673,7 +693,7 @@ function remove_songs(message, args) {
                     if (index < 0 || index > guild.queue.length) {
                         guild.boundTextChannel.send('Index out of range! Please choose a valid one, use `>queue` for checking.');
                     } else if (index === 0) {
-                        skip_songs(message, args);
+                        return skip_songs(message, args);
                     } else {
                         guild.boundTextChannel.send('**`' + guild.queue.spliceSong(index) + '` has been removed from QUEUE!**');
                     }
@@ -718,7 +738,7 @@ async function getNowPlayingData(message, bot) {
     guild.boundTextChannel.send({ embed });
 }
 function clearQueue(message) {
-    let guild = streams.get(message.guild.id);
+    guild = streams.get(message.guild.id);
     if (!guild.queue.isEmpty()) {
         guild.queue.clearQueue();
         guild.boundTextChannel.send(":x: **Queue cleared!**");
