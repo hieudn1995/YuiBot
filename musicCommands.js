@@ -334,11 +334,6 @@ function playMusic(guild) {
     guild.streamDispatcher.on('end', (reason) => {
         if (sent) { sent.delete(50); delete sent; }
         temp = guild.queue.shiftSong();
-        if(reason === 'Stream is not generating quickly enough.') { 
-            guild.boundTextChannel.send("Stream not stable! I'm skipping " + temp.title).then(mes => {
-                mes.delete(10000);
-            });
-        }
         if (guild.isLooping) {
             guild.queue.unshiftSong(temp);
         } else if (guild.isQueueLooping) {
