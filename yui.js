@@ -32,13 +32,13 @@ bot.on("message", (message) => {
   switch (command) {
     case 'play': case 'p': {
       if (musicCommands.checkChannel(message, true)) {
-          return musicCommands.play(bot, message, args);
+          return musicCommands.play(message, args);
       }
       break;
     }
     case 'pn': case 'pnext': {
       if (musicCommands.checkChannel(message, true)) {
-          return musicCommands.addNext(bot, message, args);
+          return musicCommands.addNext(message, args);
       }
       break;
     }
@@ -120,13 +120,13 @@ bot.on("message", (message) => {
     case 'search': {
       if (musicCommands.checkChannel(message, true)) {
         var query = args.join(" ");
-        return musicCommands.search_list(bot, query, message);
+        return musicCommands.searchSong(query, message);
       }
       break;
     }
     case 'autoplay': case 'ap': {
       if (musicCommands.checkChannel(message, true)) {
-        musicCommands.autoPlay(message, bot);
+        musicCommands.autoPlay(message);
       }
       break;
     }
