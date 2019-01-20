@@ -136,7 +136,7 @@ function createVoiceConnection(guild, message) {
     if (guild.voiceConnection) {
         return;
     } else {
-        guild.voiceConnection = message.member.voiceChannel.connection;
+        message.member.voiceChannel.join().then(connection => { guild.voiceConnection = connection; });
     }
 }
 function play(message, args) {    
