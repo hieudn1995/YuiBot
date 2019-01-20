@@ -132,16 +132,16 @@ function leaveVC(guild) {
     resetStatus(guild.id);
     resetChannelStat(guild.id);
 }
-function createVoiceConnection(guild, bot) {
+function createVoiceConnection(guild, message) {
     if (guild.voiceConnection) {
         return;
     } else {
-        guild.voiceConnection = bot.voiceConnections.get(guild.id);
+        guild.voiceConnection = message.member.voiceChannel.connection;
     }
 }
-function play(bot, message, args) {    
+function play(message, args) {    
     guild = streams.get(message.guild.id);
-    createVoiceConnection(guild, bot);
+    createVoiceConnection(guild, message);
     args = args.join(" ");
     if (isYtlink(args) && args.indexOf('list=') > -1) {
         queuePlaylist(guild, message, args);
@@ -278,11 +278,11 @@ function queueSong(guild, message, args) {
     });
 }
 
-function addNext(bot, message, args) {
+function addNext(message, args) {
     guild = streams.get(message.guild.id);
     queue = guild.queue;
     if (!guild.isPlaying || queue.isEmpty()) {
-        return play(bot, message, args);
+        return play(message, args);
     } else {
         args = args.join(" ");
         if (isYtlink(args) && args.indexOf('list=') > -1) {
@@ -368,7 +368,7 @@ function search_video(query, callback) {
         });
 }
 
-function searchSong(bot, query, message) {
+function searchSong(query, message) {
     request('https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=' + encodeURIComponent(query) +
         '&type=video&fields=items(id%2Ckind%2Csnippet(channelId%2CchannelTitle%2Ctitle))&key=' + ytapikey,
         function (err, respond, body) {
@@ -407,7 +407,7 @@ function searchSong(bot, query, message) {
                         let index = collected.content.trim().split(" ");
                         if (!isNaN(index) && (index > 0 && index <= 10)) {
                             let id_search = id_box[index - 1];
-                            return play(bot, message, id_search);
+                            return play(message, id_search);
                         } else {
                             message.channel.send('Invailid option! Action aborted.')
                         }
@@ -428,11 +428,11 @@ function RNG(range) {
     });
 }
 
-function autoPlay(message, bot) {
+function autoPlay(message) {
     guild = streams.get(message.guild.id);
     if (!guild.isAutoPlaying) {
         guild.isAutoPlaying = true;
-        createVoiceConnection(guild, bot);
+        createVoiceConnection(guild, message);
         guild.boundTextChannel.send("**`📻 YUI's PABX MODE - ON! 🎶 - with you wherever you go.`**");
         if (!guild.queue.isEmpty()) {
             getChannelID_pl(guild);
@@ -843,7 +843,7 @@ function youtubeTimeConverter(duration) {
 module.exports = {
     play: play,
     addNext: addNext,
-    search_list: searchSong,
+    searchSong: searchSong,
     autoPlay: autoPlay,
     check_queue: check_queue,
     remove_songs: remove_songs,
