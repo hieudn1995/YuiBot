@@ -254,7 +254,6 @@ function queueSong(guild, message, args) {
         await getInfoIds(queue, id, requester, true).then(async () => {
             getChannelID_pl(guild);
             if (guild.isPlaying === false) {
-                createVoiceConnection(guild, message);
                 guild.isPlaying = true;
                 playMusic(guild);
                 temp_status = '♫ Now Playing ♫';
