@@ -142,7 +142,7 @@ function createVoiceConnection(guild, message) {
 function play(message, args) {    
     guild = streams.get(message.guild.id);
     createVoiceConnection(guild, message);
-    args = args.join(" ");
+    args = Array.isArray(args) ? args.join(" ") : args;
     if (isYtlink(args) && args.indexOf('list=') > -1) {
         queuePlaylist(guild, message, args);
     } else {
@@ -380,10 +380,8 @@ function searchSong(query, message) {
                 return console.error(json.error);
             }
             if (json.items[0]) {
-                var id_box = [];
                 var name_box = [];
                 json.items.forEach((e) => {
-                    id_box.push(e.id.videoId);
                     name_box.push(e.snippet.title);
                 });
                 let temp1 = "```css\nPick one option from the list below, or type cancel to break.\n\n";
@@ -407,8 +405,7 @@ function searchSong(query, message) {
                     } else {
                         let index = collected.content.trim().split(" ");
                         if (!isNaN(index) && (index > 0 && index <= 10)) {
-                            let id_search = id_box[index - 1];
-                            return play(message, id_search);
+                            return play(message, name_box[index-1]);
                         } else {
                             message.channel.send('Invailid option! Action aborted.')
                         }
