@@ -405,7 +405,7 @@ function searchSong(query, message) {
                     } else {
                         let index = collected.content.trim().split(" ");
                         if (!isNaN(index) && (index > 0 && index <= 10)) {
-                            return play(message, name_box[index-1]);
+                            return play(message, name_box[index - 1]);
                         } else {
                             message.channel.send('Invailid option! Action aborted.')
                         }
