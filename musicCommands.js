@@ -3,25 +3,14 @@ const request = require('request');
 const ytdl = require('ytdl-core');
 const getPlaylistID = require('get-youtube-playlist-id');
 const getYoutubeID = require('get-youtube-id');
-const fs = require('fs');
 const song = require('./songMetaData');
 const musicQueue = require('./musicQueue');
 
-var config = JSON.parse(fs.readFileSync('./config.json', 'utf-8'));
+const ytapikey = process.env.YOUTUBE_API_KEY;
 
-const ytapikey = config.ytapikey;
-
-//const ytapikey = process.env.YOUTUBE_API_KEY;
 const colorCodeYui = 'FFA000';
 var streams = new Map;
-/**
- * @param {string} id 
- * @param {VoiceChannel} boundVoiceChannel 
- * @param {TextChannel} boundTextChannel 
- * @property {isLooping, isQueueLooping, isAutoplaying, isPlaying, isPaused}
- * @property {streamDispatcher, voiceConnection, tmp_channelId, queue}
- * @property {boundVoiceChannel, boundTextChannel}
- */
+
 function pushStream(guild, boundVoiceChannel, boundTextChannel) {
     return streams.set(guild.id, {
         id: guild.id,
@@ -142,13 +131,11 @@ function leaveVC(guild) {
 }
 
 function createVoiceConnection(guild, message) {
-    //guild = streams.get(message.guild.id);
     if (guild.voiceConnection) {
         return;
     } else {
         guild.voiceConnection = message.member.voiceChannel.connection;
     }
-    //got Voice Connection.
 }
 
 function play(message, args) {
@@ -158,7 +145,7 @@ function play(message, args) {
     if (isYtlink(args) && args.indexOf('list=') > -1) {
         queuePlaylist(guild, message, args);
     } else {
-        queueSong(guild, message, args); //this worked
+        queueSong(guild, message, args);
     }
 }
 async function queuePlaylist(guild, message, args) {
@@ -294,7 +281,6 @@ function queueSong(guild, message, args) {
             console.log(error);
         });
     });
-    //this worked
 }
 
 function addNext(message, args) {
@@ -353,9 +339,6 @@ function playMusic(guild) {
     guild.streamDispatcher.on('end', (reason) => {
         if (sent) { sent.delete(50); delete sent; }
         temp = guild.queue.shiftSong();
-        // if(reason === 'Stream is not generating quickly enough.') { 
-        //     guild.boundTextChannel.send("Something went wrong! I'm skipping " + temp.title);
-        // }
         if (guild.isLooping) {
             guild.queue.unshiftSong(temp);
         } else if (guild.isQueueLooping) {
@@ -443,7 +426,6 @@ function searchSong(query, message) {
 }
 
 
-//auto play music
 function RNG(range) {
     return new Promise(resolve => {
         resolve(Math.floor(Math.random() * range));
@@ -476,7 +458,7 @@ function getChannelID_pl(guild) {
             guild.tmp_channelId = json.items[0].snippet.channelId;
         });
 }
-//https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=UChPsCwzLIghlUKodG5zijfA&pageToken=CAgQAA&type=video&fields=items(id%2FvideoId%2Csnippet(channelId%2CchannelTitle%2Cthumbnails%2Fdefault%2Ctitle))%2CnextPageToken&key={YOUR_API_KEY}
+
 async function autoPlaySong(guild, requester) {
     nextPage = (guild.tmp_nextPage !== "") ? ("&pageToken=" + guild.tmp_nextPage) : "";
     url = 'https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=' + guild.tmp_channelId + nextPage +
@@ -785,12 +767,6 @@ function stopPlaying(message) {
         guild.boundTextChannel.send('Nothing is playing!');
     }
 }
-
-/**
- * 
- * @param {musicQueue} queue
- * @type {Promise<Number>}
- */
 function queue_length(guild) {
     return new Promise((resolve) => {
         try {
@@ -902,151 +878,3 @@ module.exports = {
     resetChannelStat: resetChannelStat,
     guildVoiceStateUpdate: guildVoiceStateUpdate,
 }
-
-// var isAutoPlaying = false;
-// var isLooping = false;
-// var isQueueLooping = false;
-// var isPlaying = false;
-// var streamDispatcher = undefined; //control current stream
-// var voiceConnection = undefined; //control current connection
-// var isPause = false;
-// var tmp_channelId = '';
-// var queue = new musicQueue;
-// var boundTextChannel;
-// var boundVoiceChannel;
-
-// async function ytdlGetInfoNext(id, requester) {
-//     return new Promise((resolve, reject) => {
-//         ytdl.getInfo(id, (err, info) => {
-//             if (err) {
-//                 reject(err);
-//             } else {
-//                 resolve(queue.addNext(new song(info.video_id, info.title, info.author.name,
-//                     info.length_seconds, requester, info.video_url, info.thumbnail_url)));
-//             }
-//         });
-//     });
-// }
-/*youtube request link: 
-https://www.googleapis.com/youtube/v3/videos?part=snippet%2C+contentDetails&id={ids...}&fields=items(contentDetails%2Fduration%2Cid%2Csnippet(channelId%2CchannelTitle%2Cthumbnails%2Fdefault%2Ctitle))&key={key}
-id = encodeURIComponent(id1,id2,...)
-part = encodeUriComponent(snippet, contentDetails)
-*/
-
-//https://stackoverflow.com/questions/22148885/converting-youtube-data-api-v3-video-duration-format-to-seconds-in-javascript-no
-// function queueSong(message, args) {
-//     var requester = message.member.displayName;
-//     //let guild = message.guild.id;
-//     let temp_status = '';
-//     getID(args, async function (id) {
-//         await getInfoIds(id, requester).then(async () => {
-//             getChannelID_pl(id);
-//             if (isPlaying === false) {
-//                 isPlaying = true;
-//                 playMusic(id, message);
-//                 temp_status = '♫ Now Playing ♫';
-//             } else {
-//                 temp_status = '♬ Added To QUEUE ♬';
-//             }
-//             var np_box = "*`Channel`*: **`" + queue.last._channel + "`**\n*`Duration`*: **`" + await time_converter(queue.last._duration) + "`**" +
-//                 ((queue.length === 1) ? "" : ("\n*`Position in queue`*: **`" + (queue.length - 1) + "`**"));
-//             var embed = new discord.RichEmbed()
-//                 .setTitle(queue.last.title)
-//                 .setAuthor(temp_status, message.author.avatarURL)
-//                 .setDescription(np_box)
-//                 .setColor(colorCodeYui)
-//                 .setThumbnail(queue.last.thumbnailUrl)
-//                 .setTimestamp()
-//                 .setURL(queue.last.videoUrl)
-//                 .setFooter('Requested by ' + requester)
-//             message.channel.send(embed);
-//         }, (error) => {
-//             console.log(error);
-//         });
-//     });
-// }
-/**
- * function checkBoundChannel(message, join) {
-    if (message.member.voiceChannel) {
-        if (!boundVoiceChannel && join) {
-            //boundVoiceChannel = message.member.voiceChannel;
-            //boundTextChannel = message.channel;
-            let boundVC = message.member.voiceChannel;
-            let boundTC = message.channel;
-            message.channel.send("Bound to Text Channel: **`" + boundTextChannel.name + "`** and Voice Channel: **`" + boundVoiceChannel.name + "`**!");
-            boundVoiceChannel.join().then((connection) => {
-                //voiceConnection = connection;
-                pushStream(message.guild.id, boundVC, boundTC, connection);
-            });
-            return true;
-        } else {
-            if (message.channel === boundTextChannel && message.member.voiceChannel === boundVoiceChannel) {
-                return true;
-            } else {
-                if (boundVoiceChannel) {
-                    message.reply("I'm playing at **`" + boundTextChannel.name + "`** -- **`" + boundVoiceChannel.name + "`**");
-                } else {
-                    message.reply("I'm not in any voice channel.");
-                }
-                return false;
-            }
-        }
-    } else {
-        message.reply("*please join a __Voice Channel__!*");
-    }
-}
- */
-// function getInfoIds(ids, requester) {
-//     return new Promise((resolve, reject) => {
-//         request('https://www.googleapis.com/youtube/v3/videos?part=' + encodeURIComponent('snippet, contentDetails') + '&id=' + encodeURIComponent(ids) + '&fields=items(contentDetails%2Fduration%2Cid%2Csnippet(channelId%2CchannelTitle%2Cthumbnails%2Fdefault%2Ctitle))&key=' + ytapikey,
-//             async function (err, res, body) {
-//                 if (err) reject(err);
-//                 var json = JSON.parse(body);
-//                 var promises = json.items.map((e) => {
-//                     pushToQueue(e, requester).catch(console.log);
-//                 });
-//                 Promise.all(promises).then(resolve).catch(console.error);
-//             });
-//     });
-// }
-// function playMusic(id, message) {
-//     let qual = (queue.getAt(0).duration === 'LIVE') ? '95' : 'highestaudio';
-//     stream = ytdl('https://www.youtube.com/watch?v=' + id, {
-//         audioonly: true,
-//         quality: qual
-//     });
-//     streamDispatcher = voiceConnection.playStream(stream, {
-//         volume: 0.75
-//     });
-//     let sent;
-//     streamDispatcher.on('start', () => {
-//         voiceConnection.player.streamingData.pausedTime = 0;
-//         if (!isLooping) {
-//             message.channel.send('**`Now Playing: 🎧 ' + queue.getAt(0).title + '!`**').then(msg => {
-//                 sent = msg;
-//             });
-//         }
-//     });
-//     streamDispatcher.on('end', () => {
-//         if (sent) {
-//             sent.delete(50);
-//         }
-//         var temp = queue.shiftSong();
-//         if (isLooping) {
-//             queue.unshiftSong(temp);
-//         } else if (isQueueLooping) {
-//             queue.addSong(temp);
-//         }
-//         if (queue.isEmpty()) {
-//             if (!isAutoPlaying) {
-//                 voiceConnection.setSpeaking(false);
-
-//                 resetStatus();
-//             } else {
-//                 autoPlaySong(tmp_channelId, message);
-//             }
-//         } else {
-//             playMusic(queue.getAt(0).id, message);
-//         }
-//     });
-// }
