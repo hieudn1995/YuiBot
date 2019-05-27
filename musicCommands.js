@@ -345,16 +345,13 @@ function playMusic(guild) {
             guild.queue.addSong(temp);
         }
         if (guild.queue.isEmpty()) {
-            delete stream;
             if (!guild.isAutoPlaying) {
-                delete temp; delete currSong; delete qual;
                 guild.voiceConnection.setSpeaking(false);
                 resetStatus(guild.id);
             } else {
                 return autoPlaySong(guild, temp.requester);
             }
         } else {
-            delete stream; delete temp; delete currSong; delete qual;
             playMusic(guild);
         }
     });
