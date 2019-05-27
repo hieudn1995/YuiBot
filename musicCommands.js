@@ -337,7 +337,7 @@ function playMusic(guild) {
         }
     });
     guild.streamDispatcher.on('end', (reason) => {
-        if (sent) { sent.delete(50); delete sent; }
+        if (sent) { sent.delete(50); }
         temp = guild.queue.shiftSong();
         if (guild.isLooping) {
             guild.queue.unshiftSong(temp);
