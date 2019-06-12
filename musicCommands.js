@@ -324,14 +324,12 @@ function playMusic(guild) {
         audioonly: true,
         quality: qual
     });
-    if (stream.readable) console.log('Readable Stream');
     guild.streamDispatcher = guild.voiceConnection.playStream(stream, {
         volume: 0.7,
         passes: 2
     });
     let sent = undefined;
     guild.streamDispatcher.on('start', () => {
-        console.log('Start');
         guild.voiceConnection.player.streamingData.pausedTime = 0;
         if (!guild.isLooping) {
             guild.boundTextChannel.send('**` 🎧 Now Playing: ' + guild.queue.getAt(0).title + '`**').then(msg => {
@@ -340,7 +338,6 @@ function playMusic(guild) {
         }
     });
     guild.streamDispatcher.on('end', (reason) => {
-        console.log('End');
         if (sent) { sent.delete(1000); }
         let temp = guild.queue.shiftSong();
         if (guild.isLooping) {
