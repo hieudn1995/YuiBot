@@ -324,7 +324,7 @@ function playMusic(guild) {
         audioonly: true,
         quality: qual
     });
-    if (stream.readable) connsole.log('Readable Stream');
+    if (stream.readable) console.log('Readable Stream');
     guild.streamDispatcher = guild.voiceConnection.playStream(stream, {
         volume: 0.7,
         passes: 2
