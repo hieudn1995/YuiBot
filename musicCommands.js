@@ -58,7 +58,7 @@ function guildVoiceStateUpdate(oldMem, newMem) {
 
 }
 function checkOnLeave(oldMem, newMem) {
-    guild = streams.get(oldMem.guild.id);
+    let guild = streams.get(oldMem.guild.id);
     let boundVC = guild ? guild.boundVoiceChannel : undefined;
     if (boundVC) {
         let oldStat = oldMem.voiceChannel;
@@ -117,7 +117,7 @@ function checkBoundChannel(message, join) {
 }
 
 function resetChannelStat(guildId) {
-    guild = streams.get(guildId);
+    let guild = streams.get(guildId);
     guild.boundTextChannel = undefined;
     guild.boundVoiceChannel = undefined;
     streams.delete(guildId);
@@ -139,7 +139,7 @@ function createVoiceConnection(guild, message) {
 }
 
 function play(message, args) {
-    guild = streams.get(message.guild.id);
+    let guild = streams.get(message.guild.id);
     createVoiceConnection(guild, message);
     args = Array.isArray(args) ? args.join(" ") : args;
     if (isYtlink(args) && args.indexOf('list=') > -1) {
@@ -253,7 +253,7 @@ function pushToQueue(queue, data, requester, atEnd) {
 
 function queueSong(guild, message, args) {
     let requester = message.member.displayName;
-    queue = guild.queue;
+    let queue = guild.queue;
     let temp_status = '';
     getID(args, async function (id) {
         await getInfoIds(queue, id, requester, true).then(async () => {
@@ -284,8 +284,8 @@ function queueSong(guild, message, args) {
 }
 
 function addNext(message, args) {
-    guild = streams.get(message.guild.id);
-    queue = guild.queue;
+    let guild = streams.get(message.guild.id);
+    let queue = guild.queue;
     if (!guild.isPlaying || queue.isEmpty()) {
         return play(message, args);
     } else {
@@ -318,16 +318,17 @@ function addNext(message, args) {
 }
 
 function playMusic(guild) {
-    currSong = guild.queue.getAt(0);
-    qual = (currSong.duration === 'LIVE') ? '95' : 'highestaudio';
-    stream = ytdl('https://www.youtube.com/watch?v=' + currSong.id, {
+    let currSong = guild.queue.getAt(0);
+    let qual = (currSong.duration === 'LIVE') ? '95' : 'highestaudio';
+    let stream = ytdl('https://www.youtube.com/watch?v=' + currSong.id, {
         audioonly: true,
         quality: qual
     });
     guild.streamDispatcher = guild.voiceConnection.playStream(stream, {
-        volume: 0.75
+        volume: 0.7,
+        passes: 2
     });
-    sent = undefined;
+    let sent = undefined;
     guild.streamDispatcher.on('start', () => {
         guild.voiceConnection.player.streamingData.pausedTime = 0;
         if (!guild.isLooping) {
@@ -338,7 +339,7 @@ function playMusic(guild) {
     });
     guild.streamDispatcher.on('end', (reason) => {
         if (sent) { sent.delete(50); }
-        temp = guild.queue.shiftSong();
+        let temp = guild.queue.shiftSong();
         if (guild.isLooping) {
             guild.queue.unshiftSong(temp);
         } else if (guild.isQueueLooping) {
@@ -430,7 +431,7 @@ function RNG(range) {
 }
 
 function autoPlay(message) {
-    guild = streams.get(message.guild.id);
+    let guild = streams.get(message.guild.id);
     if (!guild.isAutoPlaying) {
         guild.isAutoPlaying = true;
         createVoiceConnection(guild, message);
@@ -457,8 +458,8 @@ function getChannelID_pl(guild) {
 }
 
 async function autoPlaySong(guild, requester) {
-    nextPage = (guild.tmp_nextPage !== "") ? ("&pageToken=" + guild.tmp_nextPage) : "";
-    url = 'https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=' + guild.tmp_channelId + nextPage +
+    let nextPage = (guild.tmp_nextPage !== "") ? ("&pageToken=" + guild.tmp_nextPage) : "";
+    let url = 'https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=' + guild.tmp_channelId + nextPage +
     '&type=video&fields=items(id%2FvideoId%2Csnippet(channelId%2CchannelTitle%2Cthumbnails%2Fdefault%2Ctitle))%2CnextPageToken&key=' + ytapikey;
     request(url, async (err, respond, body) => {
             if (err) {
@@ -489,7 +490,7 @@ async function autoPlaySong(guild, requester) {
 }
 
 function pauseStream(message) {
-    guild = streams.get(message.guild.id);
+    let guild = streams.get(message.guild.id);
     if (guild.streamDispatcher) {
         if (!guild.isPaused) {
             guild.streamDispatcher.pause();
@@ -504,7 +505,7 @@ function pauseStream(message) {
 }
 
 function resumeStream(message) {
-    guild = streams.get(message.guild.id);
+    let guild = streams.get(message.guild.id);
     if (guild.streamDispatcher) {
         if (guild.isPaused) {
             guild.streamDispatcher.resume();
@@ -519,7 +520,7 @@ function resumeStream(message) {
 }
 
 function resetStatus(guildId) {
-    guild = streams.get(guildId);
+    let guild = streams.get(guildId);
     if (guild) {
         guild.isAutoPlaying = false;
         guild.isQueueLooping = false;
@@ -539,7 +540,7 @@ function resetStatus(guildId) {
 }
 
 function loopSettings(message, args) {
-    guild = streams.get(message.guild.id);
+    let guild = streams.get(message.guild.id);
     if (guild && !args[0]) {
         if (!guild.isLooping) {
             guild.isLooping = true;
@@ -562,7 +563,7 @@ function loopSettings(message, args) {
 }
 
 function shuffleQueue(message) {
-    guild = streams.get(message.guild.id);
+    let guild = streams.get(message.guild.id);
     if (!guild.queue.isEmpty()) {
         guild.queue.shuffle();
         guild.boundTextChannel.send(':twisted_rightwards_arrows: **QUEUE shuffled!**');
@@ -583,7 +584,7 @@ function printData(queue, start, end, border) {
 }
 
 async function check_queue(message, args) {
-    guild = streams.get(message.guild.id);
+    let guild = streams.get(message.guild.id);
     if (guild.queue.isEmpty()) {
         return guild.boundTextChannel.send('**`Nothing in queue.`**');
     }
@@ -636,7 +637,7 @@ async function check_queue(message, args) {
 }
 
 function skip_songs(message, args) {
-    guild = streams.get(message.guild.id);
+    let guild = streams.get(message.guild.id);
     if (guild.queue.isEmpty()) {
         return guild.boundTextChannel.send('Nothing is playing.');
     } else {
@@ -677,7 +678,7 @@ function skip_songs(message, args) {
 }
 
 function remove_songs(message, args) {
-    guild = streams.get(message.guild.id);
+    let guild = streams.get(message.guild.id);
     switch (args.length) {
         case 0:
             {
@@ -722,7 +723,7 @@ function remove_songs(message, args) {
     }
 }
 async function getNowPlayingData(message, bot) {
-    guild = streams.get(message.guild.id);
+    let guild = streams.get(message.guild.id);
     if (guild.queue.isEmpty()) {
         return guild.boundTextChannel.send("Nothing is playing.");
     }
