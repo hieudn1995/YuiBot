@@ -224,8 +224,8 @@ function getInfoIds(queue, ids, requester, atEnd) {
             async function (err, res, body) {
                 if (err) reject(err);
                 var json = JSON.parse(body);
-                var promises = json.items.map((e) => {
-                    pushToQueue(queue, e, requester, atEnd).catch(err => console.error(err));
+                var promises = json.items.map(async (e) => {
+                    await pushToQueue(queue, e, requester, atEnd).catch(err => console.error(err));
                 });
                 Promise.all(promises).then(resolve).catch(console.error);
             });
@@ -265,7 +265,7 @@ function queueSong(guild, message, args) {
             } else {
                 temp_status = '♬ Added To QUEUE ♬';
             }
-            var np_box = "*`Channel`*: **`" + queue.last._channel + "`**\n*`Duration`*: **`" + await time_converter(queue.last._duration) + "`**" +
+            var np_box = "*`Channel`*: **`" + queue.last._channel + "`**\n*`Duration`*: **`" + await timeConverter(queue.last._duration) + "`**" +
                 ((queue.length === 1) ? "" : ("\n*`Position in queue`*: **`" + (queue.length - 1) + "`**"));
             var embed = new discord.RichEmbed()
                 .setTitle(queue.last.title)
@@ -297,7 +297,7 @@ function addNext(message, args) {
         getID(args, async (id) => {
             await getInfoIds(queue, id, requester, false).then(async () => {
                 var np_box = "*`Channel`*: **`" + queue.getAt(1).channel + "`**" +
-                    "\n*`Duration`*: **`" + await time_converter(queue.getAt(1).duration) + "`**" +
+                    "\n*`Duration`*: **`" + await timeConverter(queue.getAt(1).duration) + "`**" +
                     "\n*`Position in queue`*: **`1`**";
                 var embed = new discord.RichEmbed()
                     .setTitle(queue.getAt(1).title)
@@ -577,13 +577,13 @@ function printData(queue, start, end, border) {
         var result = "";
         for (let i = start; i <= end && i < border; i++) {
             let s = queue.getAt(i);
-            result += "#" + (i) + ": **" + s.title + "** - `(" + await time_converter(s.duration) + ")`" + "\n*Requested by `" + s.requester + "`*\n\n";
+            result += "#" + (i) + ": **" + s.title + "** - `(" + await timeConverter(s.duration) + ")`" + "\n*Requested by `" + s.requester + "`*\n\n";
         }
         resolve(result);
     });
 }
 
-async function check_queue(message, args) {
+async function printQueue(message, args) {
     let guild = streams.get(message.guild.id);
     if (guild.queue.isEmpty()) {
         return guild.boundTextChannel.send('**`Nothing in queue.`**');
@@ -593,7 +593,7 @@ async function check_queue(message, args) {
     if (tabs === 0) tabs = 1;
     if (!args[0] || args[0] === 1) {
         let np = guild.queue.getAt(0);
-        let data = "**__NOW PLAYING:__**\n**`🎶` " + np.title + " `🎶`** - `(" + await time_converter(np.duration) + ")`\n*Requested by `" + np.requester + "`*\n\n";
+        let data = "**__NOW PLAYING:__**\n**`🎶` " + np.title + " `🎶`** - `(" + await timeConverter(np.duration) + ")`\n*Requested by `" + np.requester + "`*\n\n";
         if (n > 1) {
             data += "**__QUEUE LIST:__**\n";
             if (n <= 10) {
@@ -607,7 +607,7 @@ async function check_queue(message, args) {
         if (guild.isQueueLooping) {
             qlength = 'QUEUE Looping';
         } else {
-            qlength = await time_converter(await queue_length(guild));
+            qlength = await timeConverter(await queueLength(guild));
         }
         data += "**" + guild.name + "'s** total queue duration: `" + qlength + "` -- Tab: `1/" + tabs + "`";
         guild.boundTextChannel.send({
@@ -625,7 +625,7 @@ async function check_queue(message, args) {
         if (guild.isQueueLooping) {
             qlength = "QUEUE Looping";
         } else {
-            qlength = await time_converter(await queue_length(guild));
+            qlength = await timeConverter(await queueLength(guild));
         }
         data += "**" + guild.name + "'s** total queue duration: `" + qlength + "` -- Tab: `" + currTab + "/" + tabs + "`";
         guild.boundTextChannel.send({
@@ -636,7 +636,7 @@ async function check_queue(message, args) {
     }
 }
 
-function skip_songs(message, args) {
+function skipSongs(message, args) {
     let guild = streams.get(message.guild.id);
     if (guild.queue.isEmpty()) {
         return guild.boundTextChannel.send('Nothing is playing.');
@@ -677,7 +677,7 @@ function skip_songs(message, args) {
     }
 }
 
-function remove_songs(message, args) {
+function removeSongs(message, args) {
     let guild = streams.get(message.guild.id);
     switch (args.length) {
         case 0:
@@ -698,7 +698,7 @@ function remove_songs(message, args) {
                     if (index < 0 || index > guild.queue.length) {
                         guild.boundTextChannel.send('Index out of range! Please choose a valid one, use `>queue` for checking.');
                     } else if (index === 0) {
-                        skip_songs(message, args);
+                        skipSongs(message, args);
                     } else {
                         guild.boundTextChannel.send('**`' + guild.queue.spliceSong(index) + '` has been removed from QUEUE!**');
                     }
@@ -729,9 +729,9 @@ async function getNowPlayingData(message, bot) {
     }
     let currSong = guild.queue.getAt(0);
     let t = Math.round(guild.streamDispatcher.time / 1000);
-    let np_box = "**`" + await time_converter(t) + "`𝗹" +
+    let np_box = "**`" + await timeConverter(t) + "`𝗹" +
         await createProgressBar(t, currSong.duration) + "𝗹`" +
-        await time_converter(currSong.duration) + "`**\n__`Channel`__: **`" + currSong.channel + "`**";
+        await timeConverter(currSong.duration) + "`**\n__`Channel`__: **`" + currSong.channel + "`**";
     const embed = new discord.RichEmbed()
         .setTitle(currSong.title)
         .setAuthor('♫ Now Playing ♫', bot.user.avatarURL)
@@ -765,7 +765,7 @@ function stopPlaying(message) {
         guild.boundTextChannel.send('Nothing is playing!');
     }
 }
-function queue_length(guild) {
+function queueLength(guild) {
     return new Promise((resolve) => {
         try {
             return resolve(guild.queue.totalDurLength());
@@ -799,7 +799,7 @@ function isYtlink(str) {
     } else return false;
 }
 
-function time_converter(num) {
+function timeConverter(num) {
     return new Promise(resolve => {
         if (num == 0) {
             return resolve('LIVE');
@@ -861,9 +861,9 @@ module.exports = {
     addNext: addNext,
     searchSong: searchSong,
     autoPlay: autoPlay,
-    check_queue: check_queue,
-    remove_songs: remove_songs,
-    skip_songs: skip_songs,
+    check_queue: printQueue,
+    remove_songs: removeSongs,
+    skip_songs: skipSongs,
     shuffleQ: shuffleQueue,
     resetStatus: resetStatus,
     nowPlaying: getNowPlayingData,
