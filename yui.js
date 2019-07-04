@@ -137,7 +137,7 @@ bot.on("message", (message) => {
     case 'say': {
       return utilCommands.say(args, message);
     }
-    case '-': {
+    case 'ten': {
       return utilCommands.tenorGIF(args, message);
     }
     case 'admin': {

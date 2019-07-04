@@ -131,11 +131,7 @@ function leaveVC(guild) {
 }
 
 function createVoiceConnection(guild, message) {
-    if (guild.voiceConnection) {
-        return;
-    } else {
-        guild.voiceConnection = message.member.voiceChannel.connection;
-    }
+    guild.voiceConnection = message.member.voiceChannel.connection;
 }
 
 function play(message, args) {
