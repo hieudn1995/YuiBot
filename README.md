@@ -19,9 +19,9 @@
  - *Playing songs from queries or links (unlimited time)* 
  - *Playing youtube playlists (unlimited songs)*
  - *Playing youtube live streams (24/7,...)*
- - *Ultility commands for playing music...*
+ - *Utility commands for playing music*
  - *Posting GIFs from TENOR API*
- - *Some simple administration commands*
+ - *Some administration commands for member management*
  - *Now playing notices* 
  - *Bind and lock to a channel/Auto leave when no one's around, ...*
 
