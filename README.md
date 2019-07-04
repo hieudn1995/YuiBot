@@ -1,6 +1,6 @@
 # YuiBOT
 
-**NodeJS Discord bot with playing music ability and ultilities for administration and entertaining.**
+**NodeJS Discord bot with the ability to play music from Youtube and utilities for administration and entertainment.**
 
 **References:**
  - https://developer.mozilla.org/en-US/docs/Learn/JavaScript 
