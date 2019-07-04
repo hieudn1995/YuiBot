@@ -1,4 +1,4 @@
-# Yui-chanBOT
+# YuiBOT
 
 **NodeJS Discord bot with playing music ability and ultilities for administration and entertaining.**
 
