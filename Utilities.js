@@ -193,7 +193,7 @@ function isMyOwner(UserID) {
 function help(message, bot) {
     let commands = "**__Music:__**\n`play | p`: add to end\n" +
         "`pnext | pn`: add to next\n" +
-        "`skip | next <?range>`: skip a or some song(s)\n" +
+        "`skip | next <?range>`: skip 1 or more song(s)\n" +
         "`leave | bye`: leave the bot\n" +
         "`join | come`: join the bot\n" +
         "`queue <?number>`: list out the queue at tab number (default 0)\n" +
@@ -204,7 +204,7 @@ function help(message, bot) {
         "`shuffle`: shuffle the queue\n" +
         "`clear`: clear queue\n" +
         "`search`: search for a song, pick by index\n" +
-        "`autoplay | ap`: from current Youtube channel, random limit: 50 songs\n" +
+        "`autoplay | ap`: from current Youtube channel\n" +
         "`remove <index> <?range>`: remove a/some song(s)\n" +
         "`stop`: clear queue and stop playing\n\n" +
         "**__Ultilities:__**\n`admin <kick/ban/mute/unmute/setnickname/addrole/removerole> <@mention> <?reason>`: admin commands\n" +
