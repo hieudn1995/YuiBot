@@ -26,4 +26,4 @@
  - *Bind and lock to a channel/Auto leave when no one's around, ...*
 
 
-
+*Note: Remove the first two lines from <yui.js>, <musicCommand.js> and <Utilities.js> to host the bot on hosting servers*

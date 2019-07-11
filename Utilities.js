@@ -1,3 +1,6 @@
+//No longer hosting on server, using local process.env
+require('dotenv').config();
+
 const request = require('request');
 const discord = require('discord.js');
 

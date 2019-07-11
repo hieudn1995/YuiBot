@@ -1,3 +1,6 @@
+//No longer hosting on server, using local process.env
+require('dotenv').config();
+
 const discord = require('discord.js');
 const request = require('request');
 const ytdl = require('ytdl-core');
@@ -615,8 +618,7 @@ async function printQueue(message, args) {
     else {
         let currTab = Number(args[0]);
         let pos = (currTab - 1) * 10 + 1;
-        let data = "**__QUEUE LIST:__**\n";
-        data += await printData(guild.queue, pos, pos + 9, n);
+        let data = "**__QUEUE LIST:__**\n" + await printData(guild.queue, pos, pos + 9, n);
         let qlength;
         if (guild.isQueueLooping) {
             qlength = "QUEUE Looping";
@@ -826,26 +828,26 @@ function createProgressBar(num_progress, num_total) {
 function youtubeTimeConverter(duration) {
     return new Promise((resolve) => {
         var a = duration.match(/\d+/g);
-        if (duration.indexOf('M') >= 0 && duration.indexOf('H') == -1 && duration.indexOf('S') == -1) {
+        if (duration.indexOf('M') >= 0 && duration.indexOf('H') === -1 && duration.indexOf('S') === -1) {
             a = [0, a[0], 0];
         }
-        if (duration.indexOf('H') >= 0 && duration.indexOf('M') == -1) {
+        if (duration.indexOf('H') >= 0 && duration.indexOf('M') === -1) {
             a = [a[0], 0, a[1]];
         }
-        if (duration.indexOf('H') >= 0 && duration.indexOf('M') == -1 && duration.indexOf('S') == -1) {
+        if (duration.indexOf('H') >= 0 && duration.indexOf('M') === -1 && duration.indexOf('S') === -1) {
             a = [a[0], 0, 0];
         }
         duration = 0;
-        if (a.length == 3) {
+        if (a.length === 3) {
             duration = duration + parseInt(a[0]) * 3600;
             duration = duration + parseInt(a[1]) * 60;
             duration = duration + parseInt(a[2]);
         }
-        if (a.length == 2) {
+        if (a.length === 2) {
             duration = duration + parseInt(a[0]) * 60;
             duration = duration + parseInt(a[1]);
         }
-        if (a.length == 1) {
+        if (a.length === 1) {
             duration = duration + parseInt(a[0]);
         }
         resolve(duration);

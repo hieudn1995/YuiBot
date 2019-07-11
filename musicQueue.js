@@ -60,6 +60,12 @@ class musicQueue {
     let temp = this.songs.length - 1;
     this.songs.splice(1, temp);
   }
+   /**
+   * @returns {SongMetaData}
+   */
+  get first() {
+    return this.songs[0];
+  }
   /**
    * @returns {SongMetaData}
    */
