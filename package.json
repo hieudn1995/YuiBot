@@ -16,7 +16,7 @@
     "get-youtube-id": "^1.0.0",
     "get-youtube-playlist-id": "0.0.1",
     "opusscript": "0.0.6",
-    "request": "^2.87.0",
+    "request": "^2.88.0",
     "ytdl-core": "^0.20.4"
   }
 }
