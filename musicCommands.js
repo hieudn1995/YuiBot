@@ -797,23 +797,6 @@ function isYtlink(str) {
     } else return false;
 }
 
-function timeConverter(num) {
-    return new Promise(resolve => {
-        if (num == 0) {
-            return resolve('LIVE');
-        }
-        let t1 = Math.floor(num / 60);
-        let t2 = num % 60;
-        if (t1 < 60) {
-            return resolve(t2 >= 10 ? t1 + ":" + t2 : t1 + ":0" + t2);
-        } else {
-            let t3 = Math.floor(t1 / 60);
-            let t4 = t1 % 60;
-            let t5 = (t2 >= 10 ? t2 : "0" + t2);
-            return resolve(t4 >= 10 ? (t3 + ":" + t4 + ":" + t5) : (t3 + ":0" + t4 + ":" + t5));
-        }
-    });
-}
 
 function createProgressBar(num_progress, num_total) {
     if (isNaN(num_total)) {
@@ -825,32 +808,29 @@ function createProgressBar(num_progress, num_total) {
     }
 }
 
+function timeConverter(num) {
+    return new Promise(resolve => {
+        if (num === 0) {
+            return resolve('LIVE');
+        }
+        let totalMinutes = Math.floor(num / 60);
+        let seconds = num % 60;
+        seconds = (seconds >= 10) ? seconds : "0" + seconds;
+        if (totalMinutes < 60) {
+            return resolve(totalMinutes + ':' + seconds);
+        } else {//videos with duration exceed 1 hour
+            let hours = Math.floor(totalMinutes / 60);
+            let minutesLeft = totalMinutes % 60;
+            return resolve(hours + ':' + minutesLeft + ':' + seconds);
+        }
+    });
+}
+
 function youtubeTimeConverter(duration) {
     return new Promise((resolve) => {
-        var a = duration.match(/\d+/g);
-        if (duration.indexOf('M') >= 0 && duration.indexOf('H') === -1 && duration.indexOf('S') === -1) {
-            a = [0, a[0], 0];
-        }
-        if (duration.indexOf('H') >= 0 && duration.indexOf('M') === -1) {
-            a = [a[0], 0, a[1]];
-        }
-        if (duration.indexOf('H') >= 0 && duration.indexOf('M') === -1 && duration.indexOf('S') === -1) {
-            a = [a[0], 0, 0];
-        }
-        duration = 0;
-        if (a.length === 3) {
-            duration = duration + parseInt(a[0]) * 3600;
-            duration = duration + parseInt(a[1]) * 60;
-            duration = duration + parseInt(a[2]);
-        }
-        if (a.length === 2) {
-            duration = duration + parseInt(a[0]) * 60;
-            duration = duration + parseInt(a[1]);
-        }
-        if (a.length === 1) {
-            duration = duration + parseInt(a[0]);
-        }
-        resolve(duration);
+        var match = duration.match(/PT(\d+H)?(\d+M)?(\d+S)?/).slice(1);        
+        var result = (parseInt(match[0], 10) || 0) * 3600 + (parseInt(match[1], 10) || 0) * 60 + (parseInt(match[2], 10) || 0);
+        resolve(result);
     });
 }
 
