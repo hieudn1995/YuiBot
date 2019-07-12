@@ -12,7 +12,6 @@
  - discord.js
  - request
  - get-youtube-id
- - get-youtube-playlist-id 
  - ytdl-core
  
 **Some abilities:**

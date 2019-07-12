@@ -4,7 +4,6 @@ require('dotenv').config();
 const discord = require('discord.js');
 const request = require('request');
 const ytdl = require('ytdl-core');
-const getPlaylistID = require('get-youtube-playlist-id');
 const getYoutubeID = require('get-youtube-id');
 const song = require('./songMetaData');
 const musicQueue = require('./musicQueue');
@@ -781,6 +780,10 @@ function getID(str, callback) {
             callback(id);
         });
     }
+}
+
+function getPlaylistID(url) {
+    return url.match(/[&|\?]list=([a-zA-Z0-9_-]+)/i)[1];
 }
 
 function getPlaylistId(args, callback) {
