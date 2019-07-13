@@ -140,7 +140,7 @@ function play(message, args) {
     let guild = streams.get(message.guild.id);
     createVoiceConnection(guild, message);
     args = Array.isArray(args) ? args.join(" ") : args;
-    if (isYtlink(args) && args.indexOf('list=') > -1) {
+    if (isYoutubeLink(args) && args.indexOf('list=') > -1) {
         queuePlaylist(guild, message, args);
     } else {
         queueSong(guild, message, args);
@@ -288,7 +288,7 @@ function addNext(message, args) {
         return play(message, args);
     } else {
         args = args.join(" ");
-        if (isYtlink(args) && args.indexOf('list=') > -1) {
+        if (isYoutubeLink(args) && args.indexOf('list=') > -1) {
             return guild.boundTextChannel.send("Currently cannot add playlist to next. Use `>play` instead.");
         }
         var requester = message.member.displayName;
@@ -357,7 +357,7 @@ function playMusic(guild) {
     //WORKED!
 }
 
-function search_video(query, callback) {
+function requestVideo(query, callback) {
     request("https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=2&q=" + encodeURIComponent(query) +
         "&type=video&fields=items(id(kind%2CvideoId)%2Csnippet(channelId%2CchannelTitle%2Ctitle))&key=" + ytapikey,
         function (error, response, body) {
@@ -462,24 +462,20 @@ async function autoPlaySong(guild, requester) {
     request(url, async (err, respond, body) => {
             if (err) {
                 autoPlaySong(guild, requester);
-                delete nextPage; delete url;
                 return console.error('request-err:' + err); 
             }
             var json = JSON.parse(body);
             if (json.error) {
                 autoPlaySong(guild, requester);
-                delete nextPage; delete url;
                 return console.error("json-err:" + json.error); 
             }
             await RNG(json.items.length).then(async (rnd) => {
                 if (json.items[rnd]) {
                     guild.tmp_nextPage = json.nextPageToken ? json.nextPageToken : "";
                     await getInfoIds(guild.queue, json.items[rnd].id.videoId, requester, true).then(() => {
-                        delete nextPage; delete url;
                         playMusic(guild);
                     }, (error) => {
                         autoPlaySong(guild, requester);
-                        delete nextPage; delete url;
                         return console.error('local-getInfoIds-err:' + error);
                     });
                 }
@@ -773,10 +769,10 @@ function queueLength(guild) {
 }
 
 function getID(str, callback) {
-    if (isYtlink(str)) {
+    if (isYoutubeLink(str)) {
         callback(getYoutubeID(str));
     } else {
-        search_video(str, function (id) {
+        requestVideo(str, function (id) {
             callback(id);
         });
     }
@@ -787,14 +783,14 @@ function getPlaylistID(url) {
 }
 
 function getPlaylistId(args, callback) {
-    if (!isYtlink(args)) {
+    if (!isYoutubeLink(args)) {
         throw new Error('Argument is not a youtube link.');
     } else {
         callback(getPlaylistID(args));
     }
 }
 
-function isYtlink(str) {
+function isYoutubeLink(str) {
     if (typeof str === 'string') {
         return (str.indexOf('youtube.com') >= 0) || (str.indexOf('youtu.be') >= 0);
     } else return false;
@@ -803,7 +799,7 @@ function isYtlink(str) {
 
 function createProgressBar(num_progress, num_total) {
     if (isNaN(num_total)) {
-        return '---------------------------------------⦿';
+        return  '--------------------------------------⦿';
     } else {
         let t = '----------------------------------------';
         let index = Math.round(((num_progress / num_total) * 40));
@@ -824,6 +820,7 @@ function timeConverter(num) {
         } else {//videos with duration exceed 1 hour
             let hours = Math.floor(totalMinutes / 60);
             let minutesLeft = totalMinutes % 60;
+            minutesLeft = (minutesLeft >= 10) ? minutesLeft : "0" + minutesLeft;
             return resolve(hours + ':' + minutesLeft + ':' + seconds);
         }
     });
