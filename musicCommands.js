@@ -1,6 +1,3 @@
-//No longer hosting on server, using local process.env
-require('dotenv').config();
-
 const discord = require('discord.js');
 const request = require('request');
 const ytdl = require('ytdl-core');
