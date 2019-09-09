@@ -1,6 +1,3 @@
-//No longer hosting on server, using local process.env
-require('dotenv').config();
-
 const discord = require('discord.js');
 const bot = new discord.Client({
   disabledEvents: ['TYPING_START', 'MESSAGE_REACTION_ADD', 'RELATIONSHIP_ADD', 'RELATIONSHIP_REMOVE', 'MESSAGE_REACTION_REMOVE'],
